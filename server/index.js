@@ -1,6 +1,6 @@
 const express = require('express')
 const sequelize = require('./db')
-const models = require('./models/models')
+const associations = require('./models/associations')
 const PORT = 5000
 const router = require('./routes/index')
 const cors = require('cors')

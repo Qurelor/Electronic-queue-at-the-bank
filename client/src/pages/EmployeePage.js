@@ -1,5 +1,5 @@
 import Box from '@mui/material/Box';
-import { useEffect, useState } from 'react';
+import {useEffect, useState} from 'react';
 import {observer} from 'mobx-react-lite';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
@@ -14,7 +14,7 @@ import IconButton from '@mui/material/IconButton';
 import AccountCircle from '@mui/icons-material/AccountCircle';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
-import { useNavigate } from 'react-router-dom';
+import {useNavigate} from 'react-router-dom';
 import {getAllTalons} from '../http/talonAPI';
 import FormGroup from '@mui/material/FormGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
@@ -83,7 +83,7 @@ const EmployeePage = observer(() => {
     }
 
     function checkerHandler(e) {
-        e.target.value == 'A' && setCheckedTypeA(e.target.checked, () => selectedTypes());
+        e.target.value == 'A' && setCheckedTypeA(e.target.checked);
         e.target.value == 'B' && setCheckedTypeB(e.target.checked)
         e.target.value == 'C' && setCheckedTypeC(e.target.checked)
         e.target.value == 'D' && setCheckedTypeD(e.target.checked)
@@ -91,7 +91,16 @@ const EmployeePage = observer(() => {
         e.target.value == 'F' && setCheckedTypeF(e.target.checked)
         e.target.value == 'G' && setCheckedTypeG(e.target.checked)
         e.target.value == 'H' && setCheckedTypeH(e.target.checked)
-        selectedTypes()
+        const types = []
+        checkedTypeA && types.push('A')
+        checkedTypeB && types.push('B')
+        checkedTypeC && types.push('C')
+        checkedTypeD && types.push('D')
+        checkedTypeE && types.push('E')
+        checkedTypeF && types.push('F')
+        checkedTypeG && types.push('G')
+        checkedTypeH && types.push('H')
+        console.log(types)
     }
 
     function selectedTypes() {
@@ -107,7 +116,7 @@ const EmployeePage = observer(() => {
     }
 
     return (
-        <Box sx={{display: 'flex', flexDirection: 'column', alignItems: 'center', bgcolor: 'limegreen'}}>
+        <Box sx={{display: 'flex', flexDirection: 'column', alignItems: 'center', bgcolor: 'limegreen', minHeight: '100vh'}}>
             <AppBar sx={{backgroundColor: 'white', height: '70px'}}>
                 <Toolbar sx={{height: '70px'}}>
                     <Link href='/' underline='none' sx={{color: 'limegreen', fontSize: '40px', fontWeight: 'bold', ':hover': {color: 'black', bgcolor: 'white'}}}>БЕЛБАНК</Link>
@@ -176,7 +185,7 @@ const EmployeePage = observer(() => {
                     <Button disableRipple variant='outlined' onClick={talonSelectionButtonHandler} sx={{fontWeight: 'bold', border: '2px solid', color: 'limegreen', bgcolor: 'white', borderColor: 'limegreen', fontSize: '30px', textTransform: 'none', mt: '200px', ':hover': {border: '2px solid', color: 'black', borderColor: 'black', bgcolor: 'white'}}}>Выбрать талон</Button>
                 </Paper>}
             </Box> : 
-            <Box sx={{display: 'flex', flexDirection: 'column', alignItems: 'center', bgcolor: 'limegreen', pb: '40px'}}>
+            <Box sx={{display: 'flex', flexDirection: 'column', alignItems: 'center', bgcolor: 'limegreen', pb: '40px', height: '100%'}}>
                 <Paper elevation={9} sx={{mt: '100px', px: '60px', py: '10px'}}>
                     <Typography sx={{color: 'limegreen', fontSize: '30px', fontWeight: 'bold'}}>Выберите окно</Typography>
                 </Paper>

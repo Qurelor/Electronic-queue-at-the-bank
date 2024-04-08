@@ -1,4 +1,4 @@
-const { BankWindow } = require("../models/models")
+const {BankWindow} = require("../models/bankWindowModel")
 
 class BankWindowController {
     async create(req, res) {

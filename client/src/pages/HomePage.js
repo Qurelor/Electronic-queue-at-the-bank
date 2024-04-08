@@ -1,5 +1,5 @@
 import Box from '@mui/material/Box';
-import { useState } from 'react';
+import {useState} from 'react';
 import {observer} from 'mobx-react-lite';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';

@@ -7,7 +7,7 @@ import {useNavigate} from 'react-router-dom';
 import Paper from '@mui/material/Paper';
 import TextField from '@mui/material/TextField';
 import Link from '@mui/material/Link';
-import { useState } from 'react';
+import {useState} from 'react';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
 import OutlinedInput from '@mui/material/OutlinedInput';

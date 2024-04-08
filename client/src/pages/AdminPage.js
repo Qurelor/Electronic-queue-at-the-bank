@@ -5,7 +5,7 @@ import Button from '@mui/material/Button';
 import {useNavigate} from 'react-router-dom';
 import Paper from '@mui/material/Paper';
 import Link from '@mui/material/Link';
-import { useState } from 'react';
+import {useState} from 'react';
 import IconButton from '@mui/material/IconButton';
 import AddUserPanel from '../panels/AddUserPanel';
 import UsersPanel from '../panels/UsersPanel';

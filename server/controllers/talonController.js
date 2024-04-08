@@ -1,4 +1,4 @@
-const { Talon } = require("../models/models")
+const {Talon} = require("../models/talonModel")
 
 class TalonController {
     async create(req, res) {

@@ -6,7 +6,7 @@ import AdminPage from '../pages/AdminPage'
 import EmployeePage from '../pages/EmployeePage'
 import UserPage from '../pages/UserPage'
 import UserStore from '../store/UserStore';
-import { useEffect } from 'react'
+import {useEffect} from 'react'
 import {observer} from 'mobx-react-lite';
 
 const AppRouter = observer(() => {

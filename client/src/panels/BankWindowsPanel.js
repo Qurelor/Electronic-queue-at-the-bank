@@ -1,6 +1,6 @@
 import Paper from '@mui/material/Paper';
 import {getAllBankWindows} from '../http/bankWindowAPI';
-import { useEffect, useState } from 'react';
+import {useEffect, useState} from 'react';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
