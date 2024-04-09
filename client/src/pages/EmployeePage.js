@@ -170,7 +170,7 @@ const EmployeePage = observer(() => {
                     </Box>
                     <Paper elevation={9} sx={{display: 'flex', flexDirection: 'column', alignItems: 'center', fontSize: '30px', mx: '100px', py: '10px', pb: '40px'}}>
                         <Typography sx={{fontSize: '30px'}}>Выберите талон</Typography>
-                        {talons.map(talon =><Button disableRipple variant='outlined' onClick={talonSelectionButtonHandler} sx={{fontWeight: 'bold', border: '2px solid', color: 'limegreen', bgcolor: 'white', borderColor: 'limegreen', fontSize: '30px', textTransform: 'none', width: '200px', mt: '10px', ':hover': {border: '2px solid black', color: 'black', bgcolor: 'white'}}}>{talon.type + '-' + talon.number}</Button>)}
+                        {talons.map(talon =><Button disableRipple variant='outlined' onClick={talonSelectionButtonHandler} sx={{fontWeight: 'bold', border: '2px solid', color: 'limegreen', bgcolor: 'white', borderColor: 'limegreen', fontSize: '30px', textTransform: 'none', width: '200px', mt: '10px', ':hover': {border: '2px solid black', color: 'black', bgcolor: 'white'}}}>{`${talon.type}-${talon.number}`}</Button>)}
                     </Paper>
                 </Box> :
                     <Paper elevation={9} sx={{display: 'flex', alignItems: 'center', flexDirection: 'column', mt: '100px', pt: '10px', pb: '40px'}}>
@@ -185,7 +185,7 @@ const EmployeePage = observer(() => {
                     <Button disableRipple variant='outlined' onClick={talonSelectionButtonHandler} sx={{fontWeight: 'bold', border: '2px solid', color: 'limegreen', bgcolor: 'white', borderColor: 'limegreen', fontSize: '30px', textTransform: 'none', mt: '200px', ':hover': {border: '2px solid', color: 'black', borderColor: 'black', bgcolor: 'white'}}}>Выбрать талон</Button>
                 </Paper>}
             </Box> : 
-            <Box sx={{display: 'flex', flexDirection: 'column', alignItems: 'center', bgcolor: 'limegreen', pb: '40px', height: '100%'}}>
+            <Box sx={{display: 'flex', flexDirection: 'column', alignItems: 'center', bgcolor: 'limegreen', pb: '40px'}}>
                 <Paper elevation={9} sx={{mt: '100px', px: '60px', py: '10px'}}>
                     <Typography sx={{color: 'limegreen', fontSize: '30px', fontWeight: 'bold'}}>Выберите окно</Typography>
                 </Paper>

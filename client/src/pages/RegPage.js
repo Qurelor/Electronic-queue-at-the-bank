@@ -113,7 +113,7 @@ const RegPage = () => {
         checkEmail()
         checkPassword()
         if(checkName() && checkSurname() && checkPatronymic() && checkEmail() && checkPassword()){
-            const user = await registration((patronymic.length > 0) ? (surname + ' ' + name + ' ' + patronymic) : (surname + ' ' + name), email, password, 'USER')
+            const user = await registration((patronymic.length > 0) ? `${surname} ${name} ${patronymic}` : `${surname} ${name}`, email, password, 'USER')
             if(user == 'Пользователь с таким адресом электронной почты уже существует'){
                 setEmailErrorMessage(user)
             }else{

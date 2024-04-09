@@ -46,10 +46,10 @@ const UserPage = observer(() => {
         const maxNumber = await getMaxNumberByType(typeOfTalon)
         if(maxNumber == null) {
             await createTalon(typeOfTalon, 1, UserStore.userId)
-            setTalonNumber(typeOfTalon + '-' + 1)
+            setTalonNumber(`${typeOfTalon}-1`)
         }else{
             await createTalon(typeOfTalon, Number(maxNumber)+1, UserStore.userId)
-            setTalonNumber(typeOfTalon + '-' + (Number(maxNumber)+1))
+            setTalonNumber(`${typeOfTalon}-${(Number(maxNumber)+1)}`)
             console.log(maxNumber)
             console.log(Number(maxNumber)+1)
         }

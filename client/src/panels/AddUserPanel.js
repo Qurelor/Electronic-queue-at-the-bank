@@ -103,7 +103,7 @@ const AddUserPanel = () => {
         checkEmail()
         checkPassword()
         if(checkName() && checkSurname() && checkPatronymic() && checkEmail() && checkPassword()){
-            const user = await registration((patronymic.length > 0) ? (surname + ' ' + name + ' ' + patronymic) : (surname + ' ' + name), email, password, role)
+            const user = await registration((patronymic.length > 0) ? `${surname} ${name} ${patronymic}` : `${surname} ${name}`, email, password, role)
             if(user == 'Пользователь с таким адресом электронной почты уже существует'){
                 setEmailErrorMessage(user)
             }else{

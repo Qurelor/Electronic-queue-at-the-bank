@@ -6,7 +6,7 @@ export const createTalon = async (type, number, userId) => {
 }
 
 export const getMaxNumberByType = async (number) => {
-    const {data} = await $host.get('api/talon/getMaxNumberByType/' + number)
+    const {data} = await $host.get(`api/talon/getMaxNumberByType/${number}`)
     return data
 }
 
