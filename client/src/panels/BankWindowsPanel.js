@@ -11,6 +11,54 @@ import TableSortLabel from '@mui/material/TableSortLabel';
 import UserStore from '../store/UserStore';
 import BankWindowStore from '../store/BankWindowStore';
 import {observer} from 'mobx-react-lite';
+import { styled } from '@mui/material/styles';
+
+const PanelBackground = styled(Paper)({
+    paddingLeft: '40px',
+    paddingRight: '40px',
+    paddingTop: '20px',
+    paddingBottom: '20px',
+    marginRight: '20px'
+})
+
+const PanelTableContainer = styled(TableContainer)({
+    borderTop: '1px solid black',
+    borderLeft: '1px solid black',
+    borderRight: '1px solid black'
+})
+
+const PanelTable = styled(Table)({
+    minWidth: '650px'
+})
+
+const FirstTableRow = styled(TableRow)({
+    backgroundColor: 'rgba(128, 128, 128, 0.3)'
+})
+
+const StyledTableCell = styled(TableCell)({
+    borderRight: '1px solid black',
+    borderBottom: '1px solid black',
+    fontSize: '15px',
+    color: 'black'
+})
+
+const LastStyledTableCell = styled(TableCell)({
+    borderBottom: '1px solid black',
+    fontSize: '15px',
+    color: 'black'
+})
+
+const StyledTableSortLabel = styled(TableSortLabel)({
+    '&.Mui-active .MuiTableSortLabel-icon': {
+        color: 'black'
+    },
+    ':hover': {
+        color: 'black'
+    },
+    ':focus': {
+        color: 'black'
+    }
+})
 
 const BankWindowsPanel = observer(() => {
     const [sortIdActive, setSortIdActive] = useState(false)
@@ -60,7 +108,7 @@ const BankWindowsPanel = observer(() => {
         if(sortNumberDirection == 'desc'){
             setSortNumberDirection('asc')
             setSortNumberActive(false)
-            await getAllBankWindows('number', 'asc').then(data => BankWindowStore.setBankWindows(data))
+            await getAllBankWindows('id', 'asc').then(data => BankWindowStore.setBankWindows(data))
         }
     }
 
@@ -80,33 +128,39 @@ const BankWindowsPanel = observer(() => {
         if(sortUserIdDirection == 'desc'){
             setSortUserIdDirection('asc')
             setSortUserIdActive(false)
-            await getAllBankWindows('userId', 'asc').then(data => BankWindowStore.setBankWindows(data))
+            await getAllBankWindows('id', 'asc').then(data => BankWindowStore.setBankWindows(data))
         }
     }
 
     return (
-        <Paper elevation={9} sx={{px: '40px', py: '20px', mr: '20px'}}>
-            <TableContainer elevation={9} sx={{borderRadius: '0', borderTop: '1px solid black', borderLeft: '1px solid black', borderRight: '1px solid black'}}>
-                <Table sx={{ minWidth: 650 }}>
+        <PanelBackground elevation={9}>
+            <PanelTableContainer elevation={9}>
+                <PanelTable>
                     <TableHead>
-                        <TableRow sx={{bgcolor: 'rgba(128, 128, 128, 0.3)'}}>
-                            <TableCell sx={{borderRight: '1px solid black', borderBottom: '1px solid black', fontSize: '15px', color: 'black'}}><TableSortLabel active={sortIdActive} direction={sortIdDirection} onClick={sortIdButtonHandler} sx={{'&.Mui-active .MuiTableSortLabel-icon': {color: 'black'}, ':hover': {color: 'black'}, ':focus': {color: 'black'}}}>ID</TableSortLabel></TableCell>
-                            <TableCell sx={{borderRight: '1px solid black', borderBottom: '1px solid black', fontSize: '15px', color: 'black'}}><TableSortLabel active={sortNumberActive} direction={sortNumberDirection} onClick={sortNumberButtonHandler} sx={{'&.Mui-active .MuiTableSortLabel-icon': {color: 'black'}, ':hover': {color: 'black'}, ':focus': {color: 'black'}}}>Номер окна</TableSortLabel></TableCell>
-                            <TableCell sx={{borderBottom: '1px solid black', fontSize: '15px', color: 'black'}}><TableSortLabel active={sortUserIdActive} direction={sortUserIdDirection} onClick={sortUserIdButtonHandler} sx={{'&.Mui-active .MuiTableSortLabel-icon': {color: 'black'}, ':hover': {color: 'black'}, ':focus': {color: 'black'}}}>ID работника банка</TableSortLabel></TableCell>
-                        </TableRow>
+                        <FirstTableRow>
+                            <StyledTableCell>
+                                <StyledTableSortLabel active={sortIdActive} direction={sortIdDirection} onClick={sortIdButtonHandler}>ID</StyledTableSortLabel>
+                            </StyledTableCell>
+                            <StyledTableCell>
+                                <StyledTableSortLabel active={sortNumberActive} direction={sortNumberDirection} onClick={sortNumberButtonHandler}>Номер окна</StyledTableSortLabel>
+                            </StyledTableCell>
+                            <LastStyledTableCell>
+                                <StyledTableSortLabel active={sortUserIdActive} direction={sortUserIdDirection} onClick={sortUserIdButtonHandler}>ID работника банка</StyledTableSortLabel>
+                            </LastStyledTableCell>
+                        </FirstTableRow>
                     </TableHead>
                     <TableBody>
                         {BankWindowStore.bankWindows.map(bankWindow => (
                         <TableRow>
-                            <TableCell sx={{borderRight: '1px solid black', borderBottom: '1px solid black', fontSize: '15px', color: 'black'}}>{bankWindow.id}</TableCell>
-                            <TableCell sx={{borderRight: '1px solid black', borderBottom: '1px solid black', fontSize: '15px', color: 'black'}}>{bankWindow.number}</TableCell>
-                            <TableCell sx={{borderBottom: '1px solid black', fontSize: '15px', color: 'black'}}>{bankWindow.userId}</TableCell>
+                            <StyledTableCell>{bankWindow.id}</StyledTableCell>
+                            <StyledTableCell>{bankWindow.number}</StyledTableCell>
+                            <LastStyledTableCell>{bankWindow.userId}</LastStyledTableCell>
                         </TableRow>
                         ))}
                     </TableBody>
-                </Table>
-            </TableContainer>
-        </Paper>
+                </PanelTable>
+            </PanelTableContainer>
+        </PanelBackground>
     );
 });
 

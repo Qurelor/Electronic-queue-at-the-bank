@@ -13,6 +13,78 @@ import UserStore from '../store/UserStore';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import Slide from '@mui/material/Slide';
+import { styled } from '@mui/material/styles';
+
+const PanelContainer = styled(Paper)({
+    width: '450px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    position: 'sticky',
+    top: '110px',
+    marginLeft: '20px',
+    marginRight: '20px',
+    paddingLeft: '40px',
+    paddingRight: '40px',
+    paddingTop: '20px',
+    paddingBottom: '20px'
+})
+
+const Title = styled(Typography)({
+    fontSize: '25px'
+})
+
+const PanelTextField = styled(TextField)(({errorMessage}) => ({
+    marginTop: '20px',
+    width: '100%',
+    '& .MuiOutlinedInput-root': {
+        fontSze: '15px'
+    },
+    '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
+        borderColor: errorMessage.length > 0 ? 'red' : 'limegreen'
+    },
+    '& .MuiInputLabel-root.Mui-focused': {
+        color: errorMessage.length > 0 ? 'red' : 'limegreen'
+    },
+    '& .MuiInputLabel-root': {
+        fontSize: '15px'
+    }
+}))
+
+const RoleFormControl = styled(FormControl)({
+    marginTop: '10px'
+})
+
+const RoleFormLabel = styled(FormLabel)({
+    fontSize: '15px',
+    color: 'black',
+    '&.Mui-focused': {
+        color: 'black'
+    }
+})
+
+const RoleRadioGroup = styled(RadioGroup)({
+    color: 'black',
+    '& .MuiTypography-root': {
+        fontSize: '15px'
+    },
+    '& .MuiRadio-root.Mui-checked': {
+        color: 'limegreen', 
+        fontSize: '30px'
+    }
+})
+
+const RegButton = styled(Button)({
+    marginTop: '10px',
+    fontSize: '25px',
+    backgroundColor: 'limegreen',
+    color: 'black',
+    textTransform: 'none',
+    ':hover': {
+        backgroundColor: 'black',
+        color: 'white'
+    }
+})
 
 const AddUserPanel = () => {
 
@@ -122,38 +194,69 @@ const AddUserPanel = () => {
     }
 
     return (
-        <Paper elevation={9} sx={{ml: '20px', mr: '20px', px: '40px', py: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', width: '450px', position: 'sticky', top: '110px'}}>
-                <Typography sx={{fontSize: '25px'}}>Создание пользователя</Typography>
-                <TextField label="Имя" onChange={e => setName(e.target.value)} error={nameErrorMessage.length == 0 ? false : true} helperText={nameErrorMessage.length == 0 ? false : nameErrorMessage} variant="outlined" sx={{mt: '20px', width: '100%', '& .MuiOutlinedInput-root': {fontSize: '15px'}, '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {borderColor: nameErrorMessage.length > 0 ? 'red' : 'limegreen'}, '& .MuiInputLabel-root.Mui-focused': {color: nameErrorMessage.length > 0 ? 'red' : 'limegreen'}, '& .MuiInputLabel-root': {fontSize: '15px'}}}/>
-                <TextField label="Фамилия" onChange={e => setSurname(e.target.value)} error={surnameErrorMessage.length == 0 ? false : true} helperText={surnameErrorMessage.length == 0 ? false : surnameErrorMessage} variant="outlined" sx={{mt: '20px', width: '100%', '& .MuiOutlinedInput-root': {fontSize: '15px'}, '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {borderColor: surnameErrorMessage.length > 0 ? 'red' : 'limegreen'}, '& .MuiInputLabel-root.Mui-focused': {color: surnameErrorMessage.length > 0 ? 'red' : 'limegreen'}, '& .MuiInputLabel-root': {fontSize: '15px'}}}/>
-                <TextField label="Отчество (необязательно)" onChange={e => setPatronymic(e.target.value)} error={patronymicErrorMessage.length == 0 ? false : true} helperText={patronymicErrorMessage.length == 0 ? false : patronymicErrorMessage} variant="outlined" sx={{mt: '20px', width: '100%', '& .MuiOutlinedInput-root': {fontSize: '15px'}, '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {borderColor: patronymicErrorMessage.length > 0 ? 'red' : 'limegreen'}, '& .MuiInputLabel-root.Mui-focused': {color: patronymicErrorMessage.length > 0 ? 'red' : 'limegreen'}, '& .MuiInputLabel-root': {fontSize: '15px'}}}/>
-                <TextField label="Адрес электронной почты" onChange={e => setEmail(e.target.value)} error={emailErrorMessage.length == 0 ? false : true} helperText={emailErrorMessage.length == 0 ? false : emailErrorMessage} variant="outlined" sx={{mt: '20px', width: '100%', '& .MuiOutlinedInput-root': {fontSize: '15px'}, '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {borderColor: emailErrorMessage.length > 0 ? 'red' : 'limegreen'}, '& .MuiInputLabel-root.Mui-focused': {color: emailErrorMessage.length > 0 ? 'red' : 'limegreen'}, '& .MuiInputLabel-root': {fontSize: '15px'}}}/>
-                <TextField label="Пароль" onChange={e => setPassword(e.target.value)} error={passwordErrorMessage.length == 0 ? false : true} helperText={passwordErrorMessage.length == 0 ? false : passwordErrorMessage} variant="outlined" sx={{mt: '20px', width: '100%', '& .MuiOutlinedInput-root': {fontSize: '15px'}, '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {borderColor: passwordErrorMessage.length > 0 ? 'red' : 'limegreen'}, '& .MuiInputLabel-root.Mui-focused': {color: passwordErrorMessage.length > 0 ? 'red' : 'limegreen'}, '& .MuiInputLabel-root': {fontSize: '15px'}}}/>
-                <FormControl sx={{mt: '10px'}}>
-                    <FormLabel id="demo-row-radio-buttons-group-label"  sx={{fontSize: '15px', color: 'black', '&.Mui-focused': {color: 'black'}}}>Роль</FormLabel>
-                    <RadioGroup
-                        aria-labelledby="demo-row-radio-buttons-group-label"
-                        name="row-radio-buttons-group"
+        <PanelContainer elevation={9}>
+                <Title>Создание пользователя</Title>
+                <PanelTextField 
+                    label='Имя' 
+                    onChange={e => setName(e.target.value)} 
+                    error={nameErrorMessage.length == 0 ? false : true} 
+                    helperText={nameErrorMessage.length == 0 ? false : nameErrorMessage} 
+                    variant='outlined'
+                    errorMessage={nameErrorMessage}
+                />
+                <PanelTextField 
+                    label='Фамилия'
+                    onChange={e => setSurname(e.target.value)} 
+                    error={surnameErrorMessage.length == 0 ? false : true} 
+                    helperText={surnameErrorMessage.length == 0 ? false : surnameErrorMessage} 
+                    variant='outlined'
+                    errorMessage={surnameErrorMessage}
+                />
+                <PanelTextField 
+                    label='Отчество (необязательно)' 
+                    onChange={e => setPatronymic(e.target.value)} 
+                    error={patronymicErrorMessage.length == 0 ? false : true} 
+                    helperText={patronymicErrorMessage.length == 0 ? false : patronymicErrorMessage} 
+                    variant='outlined'
+                    errorMessage={patronymicErrorMessage}
+                />
+                <PanelTextField 
+                    label='Адрес электронной почты' 
+                    onChange={e => setEmail(e.target.value)} 
+                    error={emailErrorMessage.length == 0 ? false : true} 
+                    helperText={emailErrorMessage.length == 0 ? false : emailErrorMessage} 
+                    variant='outlined'
+                    errorMessage={emailErrorMessage}
+                />
+                <PanelTextField 
+                    label='Пароль'
+                    onChange={e => setPassword(e.target.value)} 
+                    error={passwordErrorMessage.length == 0 ? false : true} 
+                    helperText={passwordErrorMessage.length == 0 ? false : passwordErrorMessage} 
+                    variant='outlined'
+                    errorMessage={passwordErrorMessage}
+                />
+                <RoleFormControl>
+                    <RoleFormLabel>Роль</RoleFormLabel>
+                    <RoleRadioGroup
                         value={role}
                         onChange={handleChangeRole}
-                        sx={{color: 'black', '& .MuiTypography-root': {fontSize: '15px'}, '& .MuiRadio-root.Mui-checked': {color: 'limegreen', fontSize: '30px'}}}
                     >
-                        <FormControlLabel value="ADMIN" control={<Radio />} label="Администратор"/>
-                        <FormControlLabel value="EMPLOYEE" control={<Radio />} label="Работник банка" />
-                        <FormControlLabel value="USER" control={<Radio />} label="Пользователь" />
-                    </RadioGroup>
-                </FormControl>
-                <Button disableRipple variant='contained' onClick={regButtonHandler} sx={{mt: '10px', fontSize: '25px', bgcolor: 'limegreen', color: 'black', textTransform: 'none', ':hover': {bgcolor: 'black', color: 'white'}}}>Создать пользователя</Button>
+                        <FormControlLabel value='ADMIN' control={<Radio />} label='Администратор'/>
+                        <FormControlLabel value='EMPLOYEE' control={<Radio />} label='Работник банка'/>
+                        <FormControlLabel value='USER' control={<Radio />} label='Пользователь'/>
+                    </RoleRadioGroup>
+                </RoleFormControl>
+                <RegButton disableRipple variant='contained' onClick={regButtonHandler}>Создать пользователя</RegButton>
                 <Snackbar open={open} autoHideDuration={6000} onClose={handleCloseAlert} TransitionComponent={Slide}>
                     <Alert
-                        severity="success"
-                        variant="filled"
-                        sx={{ width: '100%' }}
+                        severity='success'
+                        variant='filled'
                     >
                         Пользователь успешно создан!
                     </Alert>
                 </Snackbar>
-            </Paper>
+        </PanelContainer>
     );
 };
 

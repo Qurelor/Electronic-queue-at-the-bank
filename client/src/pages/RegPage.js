@@ -18,6 +18,116 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import FormHelperText from '@mui/material/FormHelperText';
 import {registration} from '../http/userAPI';
 import UserStore from '../store/UserStore';
+import { styled } from '@mui/material/styles';
+
+const PageContainer = styled(Box)({
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: '100vh',
+    backgroundColor: 'limegreen'
+})
+
+const Header = styled(AppBar)({
+    backgroundColor: 'white',
+    height: '70px'
+})
+
+const HeaderContentContainer = styled(Toolbar)({
+    height: '70px'
+})
+
+const Logo = styled(Link)({
+    color: 'limegreen',
+    fontSize: '40px',
+    fontWeight: 'bold',
+    ':hover': {
+        color: 'black',
+        backgroundColor: 'white'
+    },
+    textDecoration: 'none'
+})
+
+const RegWindow = styled(Paper)({
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    paddingLeft: '40px',
+    paddingRight: '40px',
+    paddingTop: '20px',
+    paddingBottom: '20px'
+})
+
+const Title = styled(Typography)({
+    fontSize: '30px'
+})
+
+const StyledTextField = styled(TextField)(({errorMessage}) => ({
+    marginTop: '20px',
+    width: '400px',
+    fontSize: '30px',
+    '& .MuiOutlinedInput-root': {
+        fontSize: '20px'
+    },
+    '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
+        borderColor: errorMessage.length > 0 ? 'red' : 'limegreen'
+    },
+    '& .MuiInputLabel-root.Mui-focused': {
+        color: errorMessage.length > 0 ? 'red' : 'limegreen'
+    },
+    '& .MuiInputLabel-root': {
+        fontSize: '20px'
+    }
+}))
+
+const PasswordFormControl = styled(FormControl)(({passwordErrorMessage}) => ({
+    marginTop: '20px',
+    width: '400px',
+    '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
+        borderColor: passwordErrorMessage.length > 0 ? 'red' : 'limegreen'
+    },
+    '& .MuiInputLabel-root.Mui-focused': {
+        color: passwordErrorMessage.length > 0 ? 'red' : 'limegreen'
+    }
+}))
+
+const PasswordInputLabel = styled(InputLabel)(({passwordErrorMessage}) => ({
+    fontSize: '20px',
+    color: passwordErrorMessage.length > 0 ? '#d32f2f' : ''
+}))
+
+const PasswordOutlinedInput = styled(OutlinedInput)({
+    fontSize: '20px',
+})
+
+const AuthButtonContainer = styled(Box)({
+    display: 'flex',
+    flexDirection: 'row'
+})
+
+const Question = styled(Typography)({
+    marginTop: '20px',
+    fontSize: '20px'
+})
+
+const AuthButton = styled(Link)({
+    marginTop: '17.5px',
+    marginLeft: '5px',
+    color: 'limegreen',
+    fontSize: '22px',
+    textDecoration: 'none'
+})
+
+const RegButton = styled(Button)({
+    marginTop: '15px',
+    fontSize: '25px',
+    backgroundColor: 'limegreen',
+    color: 'black',
+    textTransform: 'none',
+    ':hover': {
+        backgroundColor: 'black', color: 'white'
+    }
+})
 
 const RegPage = () => {
     const navigate = useNavigate()
@@ -129,51 +239,77 @@ const RegPage = () => {
     }
 
     return (
-        <Box sx={{display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', bgcolor: 'limegreen'}}>
-            <AppBar sx={{backgroundColor: 'white', height: '70px'}}>
-                <Toolbar sx={{height: '70px'}}>
-                    <Link href='/' underline='none' sx={{color: 'limegreen', fontSize: '40px', fontWeight: 'bold', ':hover': {color: 'black', bgcolor: 'white'}}}>БЕЛБАНК</Link>
-                </Toolbar>
-            </AppBar>
-            <Paper elevation={9} sx={{px: '40px', py: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
-                <Typography sx={{fontSize: '30px'}}>Регистрация</Typography>
-                <TextField label="Имя" onChange={e => setName(e.target.value)} error={nameErrorMessage.length == 0 ? false : true} helperText={nameErrorMessage.length == 0 ? false : nameErrorMessage} variant="outlined" sx={{mt: '20px', width: '400px', fontSize: '30px', '& .MuiOutlinedInput-root': {fontSize: '20px'}, '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {borderColor: nameErrorMessage.length > 0 ? 'red' : 'limegreen'}, '& .MuiInputLabel-root.Mui-focused': {color: nameErrorMessage.length > 0 ? 'red' : 'limegreen'}, '& .MuiInputLabel-root': {fontSize: '20px'}}}/>
-                <TextField label="Фамилия" onChange={e => setSurname(e.target.value)} error={surnameErrorMessage.length == 0 ? false : true} helperText={surnameErrorMessage.length == 0 ? false : surnameErrorMessage} variant="outlined" sx={{mt: '20px', width: '400px', fontSize: '30px', '& .MuiOutlinedInput-root': {fontSize: '20px'}, '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {borderColor: surnameErrorMessage.length > 0 ? 'red' : 'limegreen'}, '& .MuiInputLabel-root.Mui-focused': {color: surnameErrorMessage.length > 0 ? 'red' : 'limegreen'}, '& .MuiInputLabel-root': {fontSize: '20px'}}}/>
-                <TextField label="Отчество (необязательно)" onChange={e => setPatronymic(e.target.value)} error={patronymicErrorMessage.length == 0 ? false : true} helperText={patronymicErrorMessage.length == 0 ? false : patronymicErrorMessage} variant="outlined" sx={{mt: '20px', width: '400px', fontSize: '30px', '& .MuiOutlinedInput-root': {fontSize: '20px'}, '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {borderColor: patronymicErrorMessage.length > 0 ? 'red' : 'limegreen'}, '& .MuiInputLabel-root.Mui-focused': {color: patronymicErrorMessage.length > 0 ? 'red' : 'limegreen'}, '& .MuiInputLabel-root': {fontSize: '20px'}}}/>
-                <TextField label="Адрес электронной почты" onChange={e => setEmail(e.target.value)} error={emailErrorMessage.length == 0 ? false : true} helperText={emailErrorMessage.length == 0 ? false : emailErrorMessage} variant="outlined" sx={{mt: '20px', width: '400px', fontSize: '30px', '& .MuiOutlinedInput-root': {fontSize: '20px'}, '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {borderColor: emailErrorMessage.length > 0 ? 'red' : 'limegreen'}, '& .MuiInputLabel-root.Mui-focused': {color: emailErrorMessage.length > 0 ? 'red' : 'limegreen'}, '& .MuiInputLabel-root': {fontSize: '20px'}}}/>
-                <FormControl sx={{mt: '20px', width: '400px', '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {borderColor: passwordErrorMessage.length > 0 ? 'red' : 'limegreen'}, '& .MuiInputLabel-root.Mui-focused': {color: passwordErrorMessage.length > 0 ? 'red' : 'limegreen'}}} variant="outlined">
-                    <InputLabel htmlFor="outlined-adornment-password" sx={{fontSize: '20px', color: passwordErrorMessage.length > 0 ? '#d32f2f' : ''}}>Пароль</InputLabel>
-                    <OutlinedInput
-                        id="outlined-adornment-password"
+        <PageContainer>
+            <Header>
+                <HeaderContentContainer>
+                    <Logo href='/'>БЕЛБАНК</Logo>
+                </HeaderContentContainer>
+            </Header>
+            <RegWindow elevation={9}>
+                <Title sx={{fontSize: '30px'}}>Регистрация</Title>
+                <StyledTextField 
+                    label='Имя' 
+                    onChange={e => setName(e.target.value)} 
+                    error={nameErrorMessage.length == 0 ? false : true} 
+                    helperText={nameErrorMessage.length == 0 ? false : nameErrorMessage} 
+                    variant='outlined'
+                    errorMessage={nameErrorMessage}
+                />
+                <StyledTextField 
+                    label='Фамилия' 
+                    onChange={e => setSurname(e.target.value)} 
+                    error={surnameErrorMessage.length == 0 ? false : true} 
+                    helperText={surnameErrorMessage.length == 0 ? false : surnameErrorMessage} 
+                    variant='outlined'
+                    errorMessage={surnameErrorMessage}
+                />
+                <StyledTextField 
+                    label='Отчество (необязательно)'
+                    onChange={e => setPatronymic(e.target.value)} 
+                    error={patronymicErrorMessage.length == 0 ? false : true} 
+                    helperText={patronymicErrorMessage.length == 0 ? false : patronymicErrorMessage} 
+                    variant='outlined'
+                    errorMessage={patronymicErrorMessage}
+                />
+                <StyledTextField 
+                    label='Адрес электронной почты'
+                    onChange={e => setEmail(e.target.value)} 
+                    error={emailErrorMessage.length == 0 ? false : true} 
+                    helperText={emailErrorMessage.length == 0 ? false : emailErrorMessage} 
+                    variant='outlined'
+                    errorMessage={emailErrorMessage}
+                />
+                <PasswordFormControl variant='outlined' passwordErrorMessage={passwordErrorMessage}>
+                    <PasswordInputLabel htmlFor='outlined-adornment-password' passwordErrorMessage={passwordErrorMessage}>Пароль</PasswordInputLabel>
+                    <PasswordOutlinedInput
+                        id='outlined-adornment-password'
                         type={showPassword ? 'text' : 'password'}
                         onChange={e => setPassword(e.target.value)}
                         error={passwordErrorMessage.length == 0 ? false : true}
                         helperText={passwordErrorMessage.length == 0 ? false : passwordErrorMessage}
                         endAdornment={
-                            <InputAdornment position="end">
+                            <InputAdornment position='end'>
                                 <IconButton
-                                    aria-label="toggle password visibility"
-                                    edge="end"
+                                    edge='end'
                                     onClick={handleClickShowPassword}
                                 >
                                     {showPassword ? <VisibilityOff /> : <Visibility />}
                                 </IconButton>
                             </InputAdornment>
                         }
-                        sx={{fontSize: '20px'}}
-                        label="Пароль"
+                        label='Пароль'
                     />
                     {passwordErrorMessage.length > 0 && (<FormHelperText error>
                         {passwordErrorMessage}
                     </FormHelperText>)}
-                </FormControl>
-                <Box sx={{display: 'flex', flexDirection: 'row'}}>
-                    <Typography sx={{mt: '20px', fontSize: '20px'}}>Есть аккаунт?</Typography>
-                    <Link href='/auth' underline='none' sx={{mt: '17.5px', ml: '5px', color: 'limegreen', fontSize: '22px'}}>Войти</Link>
-                </Box>
-                <Button disableRipple variant='contained' onClick={regButtonHandler} sx={{mt: '15px', fontSize: '25px', bgcolor: 'limegreen', color: 'black', textTransform: 'none', ':hover': {bgcolor: 'black', color: 'white'}}}>Создать аккаунт</Button>
-            </Paper>
-        </Box>
+                </PasswordFormControl>
+                <AuthButtonContainer>
+                    <Question>Есть аккаунт?</Question>
+                    <AuthButton href='/auth'>Войти</AuthButton>
+                </AuthButtonContainer>
+                <RegButton disableRipple variant='contained' onClick={regButtonHandler}>Создать аккаунт</RegButton>
+            </RegWindow>
+        </PageContainer>
     );
 };
 

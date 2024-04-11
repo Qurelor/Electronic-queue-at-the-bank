@@ -15,6 +15,55 @@ import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import Slide from '@mui/material/Slide';
 import {createBankWindow} from '../http/bankWindowAPI';
+import { styled } from '@mui/material/styles';
+
+const PanelContainer = styled(Paper)({
+    width: '450px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    position: 'sticky',
+    top: '110px',
+    marginLeft: '20px',
+    marginRight: '20px',
+    paddingLeft: '40px',
+    paddingRight: '40px',
+    paddingTop: '20px',
+    paddingBottom: '20px'
+})
+
+const Title = styled(Typography)({
+    fontSize: '25px'
+})
+
+const PanelTextField = styled(TextField)(({numberErrorMessage}) => ({
+    marginTop: '20px',
+    width: '100%',
+    '& .MuiOutlinedInput-root': {
+        fontSze: '15px'
+    },
+    '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
+        borderColor: numberErrorMessage.length > 0 ? 'red' : 'limegreen'
+    },
+    '& .MuiInputLabel-root.Mui-focused': {
+        color: numberErrorMessage.length > 0 ? 'red' : 'limegreen'
+    },
+    '& .MuiInputLabel-root': {
+        fontSize: '15px'
+    }
+}))
+
+const AddBankWindowButton = styled(Button)({
+    marginTop: '20px',
+    fontSize: '25px',
+    backgroundColor: 'limegreen',
+    color: 'black',
+    textTransform: 'none',
+    ':hover': {
+        backgroundColor: 'black',
+        color: 'white'
+    }
+})
 
 const AddUserPanel = () => {
 
@@ -50,20 +99,26 @@ const AddUserPanel = () => {
     }
 
     return (
-        <Paper elevation={9} sx={{ml: '20px', mr: '20px', px: '40px', py: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', width: '450px', position: 'sticky', top: '110px'}}>
-                <Typography sx={{fontSize: '25px'}}>Создание окна</Typography>
-                <TextField label="Номер окна" onChange={e => setNumber(e.target.value)} error={numberErrorMessage.length == 0 ? false : true} helperText={numberErrorMessage.length == 0 ? false : numberErrorMessage} variant="outlined" sx={{mt: '20px', width: '100%', '& .MuiOutlinedInput-root': {fontSize: '15px'}, '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {borderColor: numberErrorMessage.length > 0 ? 'red' : 'limegreen'}, '& .MuiInputLabel-root.Mui-focused': {color: numberErrorMessage.length > 0 ? 'red' : 'limegreen'}, '& .MuiInputLabel-root': {fontSize: '15px'}}}/>
-                <Button disableRipple variant='contained' onClick={addBankWindowButtonHandler} sx={{mt: '20px', fontSize: '25px', bgcolor: 'limegreen', color: 'black', textTransform: 'none', ':hover': {bgcolor: 'black', color: 'white'}}}>Создать окно</Button>
-                <Snackbar open={open} autoHideDuration={6000} onClose={handleCloseAlert} TransitionComponent={Slide}>
-                    <Alert
-                        severity="success"
-                        variant="filled"
-                        sx={{ width: '100%' }}
-                    >
-                        Окно успешно создано!
-                    </Alert>
-                </Snackbar>
-            </Paper>
+        <PanelContainer elevation={9}>
+            <Title>Создание окна</Title>
+            <PanelTextField 
+                label='Номер окна' 
+                onChange={e => setNumber(e.target.value)} 
+                error={numberErrorMessage.length == 0 ? false : true} 
+                helperText={numberErrorMessage.length == 0 ? false : numberErrorMessage} 
+                variant='outlined'
+                numberErrorMessage={numberErrorMessage}
+            />
+            <AddBankWindowButton disableRipple variant='contained' onClick={addBankWindowButtonHandler}>Создать окно</AddBankWindowButton>
+            <Snackbar open={open} autoHideDuration={6000} onClose={handleCloseAlert} TransitionComponent={Slide}>
+                <Alert
+                    severity='success'
+                    variant='filled'
+                >
+                    Окно успешно создано!
+                </Alert>
+            </Snackbar>
+        </PanelContainer>
     );
 };
 

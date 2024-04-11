@@ -1,4 +1,4 @@
-import {$host} from "./index";
+import {$host} from './index';
 
 export const createBankWindow = async (number) => {
     const {data} = await $host.post('api/bankWindow/create', {number})

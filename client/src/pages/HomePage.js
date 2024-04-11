@@ -1,5 +1,5 @@
 import Box from '@mui/material/Box';
-import {useState} from 'react';
+import React, {useState} from 'react';
 import {observer} from 'mobx-react-lite';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
@@ -11,6 +11,96 @@ import IconButton from '@mui/material/IconButton';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import UserStore from '../store/UserStore';
+import { styled } from '@mui/material/styles';
+
+const Header = styled(AppBar)({
+    backgroundColor: 'white',
+    height: '70px'
+})
+
+const HeaderContentContainer = styled(Toolbar)({
+    height: '70px'
+})
+
+const Logo = styled(Link)({
+    color: 'limegreen',
+    fontSize: '40px',
+    fontWeight: 'bold',
+    ':hover': {
+        color: 'black',
+        backgroundColor: 'white'
+    },
+    textDecoration: 'none'
+})
+
+const UserButton = styled(Button)({
+    marginLeft: '30px',
+    fontWeight: 'bold',
+    border: '2px solid limegreen',
+    color: 'limegreen',
+    backgroundColor: 'white',
+    fontSize: '25px',
+    textTransform: 'none',
+    ':hover': {
+        border: '2px solid black',
+        color: 'black',
+        backgroundColor: 'white'
+    }
+})
+
+const HeaderButtonsContainer = styled(Box)({
+    display: 'flex',
+    marginLeft: 'auto'
+})
+
+const AdminButton = styled(Button)({
+    marginRight: '30px',
+    fontWeight: 'bold',
+    border: '2px solid limegreen',
+    color: 'limegreen',
+    backgroundColor: 'white',
+    fontSize: '25px',
+    textTransform: 'none',
+    ':hover': {
+        border: '2px solid black',
+        color: 'black',
+        backgroundColor: 'white'
+    }
+})
+
+const EmployeeButton = styled(Button)({
+    marginRight: '30px',
+    fontWeight: 'bold',
+    border: '2px solid limegreen',
+    color: 'limegreen',
+    backgroundColor: 'white',
+    fontSize: '25px',
+    textTransform: 'none',
+    ':hover': {
+        border: '2px solid black',
+        color: 'black',
+        backgroundColor: 'white'
+    }
+})
+
+const AccountButtonIcon = styled(AccountCircle)({
+    color: 'limegreen',
+    fontSize: '40px'
+})
+
+const AuthButton = styled(Button)({
+    fontWeight: 'bold',
+    border: '2px solid limegreen',
+    color: 'limegreen',
+    backgroundColor: 'white',
+    fontSize: '25px',
+    textTransform: 'none',
+    ':hover': {
+        border: '2px solid black',
+        color: 'black',
+        backgroundColor: 'white'
+    }
+})
 
 const HomePage = observer(() => {
 
@@ -52,43 +142,41 @@ const HomePage = observer(() => {
 
     return (
         <Box>
-            <AppBar sx={{backgroundColor: 'white', height: '70px'}}>
-                <Toolbar sx={{height: '70px'}}>
-                    <Link href='/' underline='none' sx={{color: 'limegreen', fontSize: '40px', fontWeight: 'bold', ':hover': {color: 'black', bgcolor: 'white'}}}>БЕЛБАНК</Link>
-                    {UserStore.role == 'USER' && <Button disableRipple variant='outlined' onClick={userButtonHandler} sx={{ml: '30px', fontWeight: 'bold', border: '2px solid', color: 'limegreen', bgcolor: 'white', borderColor: 'limegreen', fontSize: 25, textTransform: 'none', ':hover': {border: '2px solid', color: 'black', borderColor: 'black', bgcolor: 'white'}}}>Заказать талон</Button>}
-                    <Box sx={{display: 'flex', marginLeft: 'auto'}}>
-                    {UserStore.role == 'ADMIN' && <Button disableRipple variant='outlined' onClick={adminButtonHandler} sx={{mr: '30px', fontWeight: 'bold', border: '2px solid', color: 'limegreen', bgcolor: 'white', borderColor: 'limegreen', fontSize: 25, textTransform: 'none', ':hover': {border: '2px solid', color: 'black', borderColor: 'black', bgcolor: 'white'}}}>Админ панель</Button>} 
-                    {UserStore.role == 'EMPLOYEE' && <Button disableRipple variant='outlined' onClick={employeeButtonHandler} sx={{mr: '30px', fontWeight: 'bold', border: '2px solid', color: 'limegreen', bgcolor: 'white', borderColor: 'limegreen', fontSize: 25, textTransform: 'none', ':hover': {border: '2px solid', color: 'black', borderColor: 'black', bgcolor: 'white'}}}>Рабочее место</Button>}
-                    {UserStore.isAuth == 'true' ?
-                    <Box>
-                        <IconButton
-                            onClick={handleMenu}
-                        >
-                        <AccountCircle sx={{color: 'limegreen', fontSize: '40px'}}/>
-                        </IconButton>
-                        <Menu
-                            id="menu-appbar"
-                            anchorEl={anchorEl}
-                            anchorOrigin={{
-                                vertical: 'bottom',
-                                horizontal: 'center',
-                            }}
-                            keepMounted
-                            transformOrigin={{
-                                vertical: 'top',
-                                horizontal: 'center',
-                            }}
-                            open={Boolean(anchorEl)}
-                            onClose={handleClose}
-                        >
-                            <MenuItem onClick={exitButtonHandler}>Выйти</MenuItem>
-                        </Menu>
-                    </Box> :
-                    <Button disableRipple variant='outlined' onClick={authButtonHandler} sx={{fontWeight: 'bold', border: '2px solid', color: 'limegreen', bgcolor: 'white', borderColor: 'limegreen', fontSize: 25, textTransform: 'none', ':hover': {border: '2px solid', color: 'black', borderColor: 'black', bgcolor: 'white'}}}>Войти</Button>
-                    }
-                    </Box>
-                </Toolbar>
-            </AppBar>
+            <Header>
+                <HeaderContentContainer>
+                    <Logo href='/'>БЕЛБАНК</Logo>
+                    {UserStore.role == 'USER' && <UserButton disableRipple variant='outlined' onClick={userButtonHandler}>Заказать талон</UserButton>}
+                    <HeaderButtonsContainer>
+                        {UserStore.role == 'ADMIN' && <AdminButton disableRipple variant='outlined' onClick={adminButtonHandler}>Админ панель</AdminButton>} 
+                        {UserStore.role == 'EMPLOYEE' && <EmployeeButton disableRipple variant='outlined' onClick={employeeButtonHandler}>Рабочее место</EmployeeButton>}
+                        {UserStore.isAuth == 'true' ?
+                        <Box>
+                            <IconButton
+                                onClick={handleMenu}
+                            >
+                            <AccountButtonIcon/>
+                            </IconButton>
+                            <Menu
+                                anchorEl={anchorEl}
+                                anchorOrigin={{
+                                    vertical: 'bottom',
+                                    horizontal: 'center',
+                                }}
+                                keepMounted
+                                transformOrigin={{
+                                    vertical: 'top',
+                                    horizontal: 'center',
+                                }}
+                                open={Boolean(anchorEl)}
+                                onClose={handleClose}
+                            >
+                                <MenuItem onClick={exitButtonHandler}>Выйти</MenuItem>
+                            </Menu>
+                        </Box> :
+                        <AuthButton disableRipple variant='outlined' onClick={authButtonHandler}>Войти</AuthButton>}
+                    </HeaderButtonsContainer>
+                </HeaderContentContainer>
+            </Header>
         </Box>
     );
 });

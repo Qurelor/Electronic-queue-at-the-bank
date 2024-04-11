@@ -10,6 +10,54 @@ import TableRow from '@mui/material/TableRow';
 import TableSortLabel from '@mui/material/TableSortLabel';
 import UserStore from '../store/UserStore';
 import {observer} from 'mobx-react-lite';
+import { styled } from '@mui/material/styles';
+
+const PanelBackground = styled(Paper)({
+    paddingLeft: '40px',
+    paddingRight: '40px',
+    paddingTop: '20px',
+    paddingBottom: '20px',
+    marginRight: '20px'
+})
+
+const PanelTableContainer = styled(TableContainer)({
+    borderTop: '1px solid black',
+    borderLeft: '1px solid black',
+    borderRight: '1px solid black'
+})
+
+const PanelTable = styled(Table)({
+    minWidth: '650px'
+})
+
+const FirstTableRow = styled(TableRow)({
+    backgroundColor: 'rgba(128, 128, 128, 0.3)'
+})
+
+const StyledTableCell = styled(TableCell)({
+    borderRight: '1px solid black',
+    borderBottom: '1px solid black',
+    fontSize: '15px',
+    color: 'black'
+})
+
+const LastStyledTableCell = styled(TableCell)({
+    borderBottom: '1px solid black',
+    fontSize: '15px',
+    color: 'black'
+})
+
+const StyledTableSortLabel = styled(TableSortLabel)({
+    '&.Mui-active .MuiTableSortLabel-icon': {
+        color: 'black'
+    },
+    ':hover': {
+        color: 'black'
+    },
+    ':focus': {
+        color: 'black'
+    }
+})
 
 const UsersPanel = observer(() => {
     const [sortIdActive, setSortIdActive] = useState(false)
@@ -149,32 +197,32 @@ const UsersPanel = observer(() => {
 
 
     return (
-        <Paper elevation={9} sx={{px: '40px', py: '20px', mr: '20px'}}>
-            <TableContainer elevation={9} sx={{borderRadius: '0', borderTop: '1px solid black', borderLeft: '1px solid black', borderRight: '1px solid black'}}>
-                <Table sx={{ minWidth: 650 }}>
+        <PanelBackground elevation={9}>
+            <PanelTableContainer elevation={9}>
+                <PanelTable>
                     <TableHead>
-                        <TableRow sx={{bgcolor: 'rgba(128, 128, 128, 0.3)'}}>
-                            <TableCell sx={{borderRight: '1px solid black', borderBottom: '1px solid black', fontSize: '15px', color: 'black'}}><TableSortLabel active={sortIdActive} direction={sortIdDirection} onClick={sortIdButtonHandler} sx={{'&.Mui-active .MuiTableSortLabel-icon': {color: 'black'}, ':hover': {color: 'black'}, ':focus': {color: 'black'}}}>ID</TableSortLabel></TableCell>
-                            <TableCell sx={{borderRight: '1px solid black', borderBottom: '1px solid black', fontSize: '15px', color: 'black'}}><TableSortLabel active={sortFullNameActive} direction={sortFullNameDirection} onClick={sortFullNameButtonHandler} sx={{'&.Mui-active .MuiTableSortLabel-icon': {color: 'black'}, ':hover': {color: 'black'}, ':focus': {color: 'black'}}}>ФИО</TableSortLabel></TableCell>
-                            <TableCell sx={{borderRight: '1px solid black', borderBottom: '1px solid black', fontSize: '15px', color: 'black'}}><TableSortLabel active={sortEmailActive} direction={sortEmailDirection} onClick={sortEmailButtonHandler} sx={{'&.Mui-active .MuiTableSortLabel-icon': {color: 'black'}, ':hover': {color: 'black'}, ':focus': {color: 'black'}}}>Адрес электронной почты</TableSortLabel></TableCell>
-                            <TableCell sx={{borderRight: '1px solid black', borderBottom: '1px solid black', fontSize: '15px', color: 'black'}}><TableSortLabel active={sortPasswordActive} direction={sortPasswordDirection} onClick={sortPasswordButtonHandler} sx={{'&.Mui-active .MuiTableSortLabel-icon': {color: 'black'}, ':hover': {color: 'black'}, ':focus': {color: 'black'}}}>Пароль</TableSortLabel></TableCell>
-                            <TableCell sx={{borderBottom: '1px solid black', fontSize: '15px', color: 'black'}}><TableSortLabel active={sortRoleActive} direction={sortRoleDirection} onClick={sortRoleButtonHandler} sx={{'&.Mui-active .MuiTableSortLabel-icon': {color: 'black'}, ':hover': {color: 'black'}, ':focus': {color: 'black'}}}>Роль</TableSortLabel></TableCell>
-                        </TableRow>
+                        <FirstTableRow>
+                            <StyledTableCell><StyledTableSortLabel active={sortIdActive} direction={sortIdDirection} onClick={sortIdButtonHandler}>ID</StyledTableSortLabel></StyledTableCell>
+                            <StyledTableCell><StyledTableSortLabel active={sortFullNameActive} direction={sortFullNameDirection} onClick={sortFullNameButtonHandler}>ФИО</StyledTableSortLabel></StyledTableCell>
+                            <StyledTableCell><StyledTableSortLabel active={sortEmailActive} direction={sortEmailDirection} onClick={sortEmailButtonHandler}>Адрес электронной почты</StyledTableSortLabel></StyledTableCell>
+                            <StyledTableCell><StyledTableSortLabel active={sortPasswordActive} direction={sortPasswordDirection} onClick={sortPasswordButtonHandler}>Пароль</StyledTableSortLabel></StyledTableCell>
+                            <LastStyledTableCell><StyledTableSortLabel active={sortRoleActive} direction={sortRoleDirection} onClick={sortRoleButtonHandler}>Роль</StyledTableSortLabel></LastStyledTableCell>
+                        </FirstTableRow>
                     </TableHead>
                     <TableBody>
                         {UserStore.users.map(user => (
                         <TableRow>
-                            <TableCell sx={{borderRight: '1px solid black', borderBottom: '1px solid black', fontSize: '15px', color: 'black'}}>{user.id}</TableCell>
-                            <TableCell sx={{borderRight: '1px solid black', borderBottom: '1px solid black', fontSize: '15px', color: 'black'}}>{user.fullName}</TableCell>
-                            <TableCell sx={{borderRight: '1px solid black', borderBottom: '1px solid black', fontSize: '15px', color: 'black'}}>{user.email}</TableCell>
-                            <TableCell sx={{borderRight: '1px solid black', borderBottom: '1px solid black', fontSize: '15px', color: 'black'}}>{user.password}</TableCell>
-                            <TableCell sx={{borderBottom: '1px solid black', fontSize: '15px', color: 'black'}}>{user.role}</TableCell>
+                            <StyledTableCell>{user.id}</StyledTableCell>
+                            <StyledTableCell>{user.fullName}</StyledTableCell>
+                            <StyledTableCell>{user.email}</StyledTableCell>
+                            <StyledTableCell>{user.password}</StyledTableCell>
+                            <LastStyledTableCell>{user.role}</LastStyledTableCell>
                         </TableRow>
                         ))}
                     </TableBody>
-                </Table>
-            </TableContainer>
-        </Paper>
+                </PanelTable>
+            </PanelTableContainer>
+        </PanelBackground>
     );
 });
 

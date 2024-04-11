@@ -1,4 +1,4 @@
-import {$host} from "./index";
+import {$host} from './index';
 
 export const createTalon = async (type, number, userId) => {
     const {data} = await $host.post('api/talon/create', {type, number, userId})

@@ -15,6 +15,123 @@ import UserStore from '../store/UserStore';
 import AccountCircle from '@mui/icons-material/AccountCircle';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
+import { styled } from '@mui/material/styles';
+
+const PageContainer = styled(Box)({
+    display: 'flex',
+    flexDirection: 'column',
+    height: '100vh',
+    backgroundColor: 'limegreen'
+})
+
+const Header = styled(AppBar)({
+    backgroundColor: 'white',
+    height: '70px'
+})
+
+const HeaderContentContainer = styled(Toolbar)({
+    height: '70px'
+})
+
+const Logo = styled(Link)({
+    color: 'limegreen',
+    fontSize: '40px',
+    fontWeight: 'bold',
+    ':hover': {
+        color: 'black',
+        backgroundColor: 'white'
+    },
+    textDecoration: 'none'
+})
+
+const HeaderButtonsContainer = styled(Box)({
+    display: 'flex',
+    marginLeft: 'auto'
+})
+
+const AdminButton = styled(Button)({
+    marginRight: '30px',
+    fontWeight: 'bold',
+    border: '2px solid',
+    color: 'limegreen',
+    backgroundColor: 'white',
+    borderColor: 'limegreen',
+    fontSize: '25px',
+    textTransform: 'none',
+    ':hover': {
+        border: '2px solid',
+        color: 'black',
+        borderColor: 'black',
+        backgroundColor: 'white'
+    }
+})
+
+const AccountButtonIcon = styled(AccountCircle)({
+    color: 'limegreen',
+    fontSize: '40px'
+})
+
+const UsersAndBankWindowsContainer = styled(Box)({
+    display: 'flex',
+    marginTop: '110px',
+    justifyContent: 'center',
+    backgroundColor: 'limegreen',
+    paddingBottom: '40px',
+    flexDirection: 'row'
+})
+
+const ButtonsContainer = styled(Box)({
+    display: 'flex',
+    height: '100%',
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center'
+})
+
+const BackgroundButtons = styled(Paper)({
+    paddingLeft: '40px',
+    paddingRight: '40px',
+    paddingTop: '20px',
+    paddingBottom: '20px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center'
+})
+
+const UsersButton = styled(Button)({
+    fontWeight: 'bold',
+    border: '2px solid',
+    color: 'limegreen',
+    bgcolor: 'white',
+    borderColor: 'limegreen',
+    fontSize: '25px',
+    textTransform: 'none',
+    width: '50vw',
+    ':hover': {
+        border: '2px solid',
+        color: 'black',
+        borderColor: 'black',
+        backgroundColor: 'white'
+    }
+})
+
+const BankWindowsButton = styled(Button)({
+    marginTop: '20px',
+    fontWeight: 'bold',
+    border: '2px solid',
+    color: 'limegreen',
+    backgroundColor: 'white',
+    borderColor: 'limegreen',
+    fontSize: '25px',
+    textTransform: 'none',
+    width: '50vw',
+    ':hover': {
+        border: '2px solid',
+        color: 'black',
+        borderColor: 'black',
+        backgroundColor: 'white'
+    }
+})
 
 const AdminPage = () => {
 
@@ -54,75 +171,58 @@ const AdminPage = () => {
         navigate('/')
     }
 
-
     return (
-        <Box sx={{display: 'flex', flexDirection: 'column', height: '100vh', bgcolor: 'limegreen'}}>
-            <AppBar sx={{backgroundColor: 'white', height: '70px'}}>
-                <Toolbar sx={{height: '70px'}}>
-                    <Link href='/' underline='none' sx={{color: 'limegreen', fontSize: '40px', fontWeight: 'bold', ':hover': {color: 'black', bgcolor: 'white'}}}>БЕЛБАНК</Link>
-                    <Box sx={{display: 'flex', marginLeft: 'auto'}}>
-                    <Button disableRipple variant='outlined' onClick={adminButtonHandler} sx={{mr: '30px', fontWeight: 'bold', border: '2px solid', color: 'limegreen', bgcolor: 'white', borderColor: 'limegreen', fontSize: '25px', textTransform: 'none', ':hover': {border: '2px solid', color: 'black', borderColor: 'black', bgcolor: 'white'}}}>Админ панель</Button>
-                        <Box>
-                            <IconButton
-                                onClick={handleMenu}
-                            >
-                                <AccountCircle sx={{color: 'limegreen', fontSize: '40px'}}/>
-                            </IconButton>
-                            <Menu
-                                id="menu-appbar"
-                                anchorEl={anchorEl}
-                                anchorOrigin={{
-                                    vertical: 'bottom',
-                                    horizontal: 'center',
-                                }}
-                                keepMounted
-                                transformOrigin={{
-                                    vertical: 'top',
-                                    horizontal: 'center',
-                                }}
-                                open={Boolean(anchorEl)}
-                                onClose={handleClose}
-                            >
-                                <MenuItem onClick={exitButtonHandler}>Выйти</MenuItem>
-                            </Menu>
-                        </Box>
-                    </Box>
-                </Toolbar>
-            </AppBar>
-            {showUsersPanel && 
-            <Box sx={{display: 'flex', mt: '110px', width: '100%', justifyContent: 'center', bgcolor: 'limegreen', pb: '40px'}}>
-                <Box sx={{display: 'flex', flexDirection: 'row'}}>
-                    <Box sx={{flexDirection: 'column'}}>
-                        <AddUserPanel></AddUserPanel>
-                        <Box></Box>
-                    </Box>
-                    <Box sx={{flexDirection: 'column'}}>
-                        <UsersPanel></UsersPanel>
-                        <Box></Box>
-                    </Box>
+        <PageContainer>
+            <Header>
+                <HeaderContentContainer>
+                    <Logo href='/'>БЕЛБАНК</Logo>
+                    <HeaderButtonsContainer>
+                        <AdminButton disableRipple variant='outlined' onClick={adminButtonHandler}>
+                            Админ панель
+                        </AdminButton>
+                        <IconButton onClick={handleMenu}>
+                            <AccountButtonIcon/>
+                        </IconButton>
+                        <Menu
+                            anchorEl={anchorEl}
+                            anchorOrigin={{
+                                vertical: 'bottom',
+                                horizontal: 'center',
+                            }}
+                            keepMounted
+                            transformOrigin={{
+                                vertical: 'top',
+                                horizontal: 'center',
+                            }}
+                            open={Boolean(anchorEl)}
+                            onClose={handleClose}
+                        >
+                            <MenuItem onClick={exitButtonHandler}>Выйти</MenuItem>
+                        </Menu>
+                    </HeaderButtonsContainer>
+                </HeaderContentContainer>
+            </Header>
+            {(showUsersPanel || showBankWindowsPanel) && 
+            <UsersAndBankWindowsContainer>
+                <Box>
+                    {showUsersPanel && <AddUserPanel></AddUserPanel>}
+                    {showBankWindowsPanel && <AddBankWindowPanel></AddBankWindowPanel>}
+                    <Box/>
                 </Box>
-            </Box>}
-            {showBankWindowsPanel && 
-            <Box sx={{display: 'flex', mt: '110px', width: '100%', justifyContent: 'center', bgcolor: 'limegreen', pb: '40px'}}>
-                <Box sx={{display: 'flex', flexDirection: 'row'}}>
-                    <Box sx={{flexDirection: 'column'}}>
-                        <AddBankWindowPanel></AddBankWindowPanel>
-                        <Box></Box>
-                    </Box>
-                    <Box sx={{flexDirection: 'column'}}>
-                        <BankWindowsPanel></BankWindowsPanel>
-                        <Box></Box>
-                    </Box>
+                <Box>
+                    {showUsersPanel && <UsersPanel></UsersPanel>}
+                    {showBankWindowsPanel && <BankWindowsPanel></BankWindowsPanel>}
+                    <Box/>
                 </Box>
-            </Box>}
+            </UsersAndBankWindowsContainer>}
             {!showUsersPanel && !showBankWindowsPanel &&
-            <Box sx={{display: 'flex', height: '100%', width: '100%', justifyContent: 'center', alignItems: 'center'}}>
-                <Paper elevation={9} sx={{px: '40px', py: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
-                    <Button disableRipple variant='outlined' onClick={usersButtonHandler} sx={{fontWeight: 'bold', border: '2px solid', color: 'limegreen', bgcolor: 'white', borderColor: 'limegreen', fontSize: 25, textTransform: 'none', width: '50vw', ':hover': {border: '2px solid', color: 'black', borderColor: 'black', bgcolor: 'white'}}}>Пользователи</Button>
-                    <Button disableRipple variant='outlined' onClick={bankWindowsButtonHandler} sx={{mt: '20px', fontWeight: 'bold', border: '2px solid', color: 'limegreen', bgcolor: 'white', borderColor: 'limegreen', fontSize: 25, textTransform: 'none', width: '50vw', ':hover': {border: '2px solid', color: 'black', borderColor: 'black', bgcolor: 'white'}}}>Окна</Button>
-                </Paper>
-            </Box>}
-        </Box>
+            <ButtonsContainer>
+                <BackgroundButtons elevation={9}>
+                    <UsersButton disableRipple variant='outlined' onClick={usersButtonHandler}>Пользователи</UsersButton>
+                    <BankWindowsButton disableRipple variant='outlined' onClick={bankWindowsButtonHandler}>Окна</BankWindowsButton>
+                </BackgroundButtons>
+            </ButtonsContainer>}
+        </PageContainer>
     );
 };
 
