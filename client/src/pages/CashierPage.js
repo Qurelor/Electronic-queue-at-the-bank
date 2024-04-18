@@ -15,18 +15,23 @@ import AccountCircle from '@mui/icons-material/AccountCircle';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import {useNavigate} from 'react-router-dom';
-import {getAllTalons} from '../http/talonAPI';
 import FormGroup from '@mui/material/FormGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import { styled } from '@mui/material/styles';
+import TalonStore from '../store/TalonStore';
+import {getAllTalons, setTalonBankWindowId, setTalonIsActualFalse} from '../http/talonAPI';
+import {getCashierIdByUserId} from '../http/cashierAPI';
+import {getServiceIdsByCashierId} from '../http/cashierServiceAPI';
+import {getTypesByServiceIds} from '../http/serviceAPI';
 
 const PageContainer = styled(Box)({
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     backgroundColor: 'limegreen',
-    minHeight: '100vh'
+    minHeight: '100vh',
+    paddingBottom: '40px'
 })
 
 const Header = styled(AppBar)({
@@ -60,59 +65,26 @@ const AccountButtonIcon = styled(AccountCircle)({
 })
 
 const WorkplaceContainer = styled(Box)({
-    height: '100vh',
     width: '100%'
 })
 
-const TalonSelectionGrid = styled(Box)({
+const SelectTalonWindowContainer = styled(Paper)({
     display: 'grid',
     gridTemplateColumns: '1fr 1fr 1fr',
     marginTop: '100px',
-    bgcolor: 'limegreen',
-    paddingBottom: '40px'
+    justifyItems: 'center',
+    alignItems: 'start',
+    paddingBottom: '20px'
 })
 
-const TypesOfTalonsContainer = styled(Box)({
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-})
-
-const TypesOfTalonsBackground = styled(Paper)({
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    paddingLeft: '100px',
-    paddingRight: '100px',
-    paddingTop: '10px',
-    paddingBottom: '30px'
-})
-
-const TypesOfTalonsTitle = styled(Typography)({
-    fontSize: '30px'
-})
-
-const TypesOfTalonsFormGroup = styled(FormGroup)({
-    '& .MuiSvgIcon-root': {
-        fontSize: '30px'
-    },
-    '& .MuiTypography-root': {
-        fontSize: '30px'
-    },
-    '& .MuiCheckbox-root.Mui-checked': {
-        color: 'limegreen'
-    }
-})
-
-const SelectTalonBackground = styled(Paper)({
+const SelectTalonContainer = styled(Box)({
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     fontSize: '30px',
-    marginLeft: '100px',
-    marginRight: '100px',
     paddingTop: '10px',
-    paddingBottom: '50px'
+    paddingLeft: '20px',
+    paddingRight: '20px'
 })
 
 const SelectTalonTitle = styled(Typography)({
@@ -134,6 +106,23 @@ const TalonButton = styled(Button)({
         color: 'black',
         backgroundColor: 'white'
     }
+})
+
+const ExitToWorkingWindowButton = styled(Button)({
+    fontWeight: 'bold',
+    border: '2px solid',
+    color: 'limegreen',
+    backgroundColor: 'white',
+    borderColor: 'limegreen',
+    fontSize: '30px',
+    textTransform: 'none',
+    ':hover': {
+        border: '2px solid',
+        color: 'black',
+        borderColor: 'black',
+        backgroundColor: 'white'
+    },
+    marginTop: '10px'
 })
 
 const WorkingWindowContainer = styled(Paper)({
@@ -240,25 +229,30 @@ const BankWindowButton = styled(Button)({
     }
 })
 
-const EmployeePage = observer(() => {
+const CashierPage = observer(() => {
 
     const navigate = useNavigate()
     const [anchorEl, setAnchorEl] = useState(null);
     const [showTalonSelectionWindow, setShowTalonSelectionWindow] = useState(false);
-    const [talons, setTalons] = useState([]);
-    const [checkedTypeA, setCheckedTypeA] = useState(true)
-    const [checkedTypeB, setCheckedTypeB] = useState(true)
-    const [checkedTypeC, setCheckedTypeC] = useState(true)
-    const [checkedTypeD, setCheckedTypeD] = useState(true)
-    const [checkedTypeE, setCheckedTypeE] = useState(true)
-    const [checkedTypeF, setCheckedTypeF] = useState(true)
-    const [checkedTypeG, setCheckedTypeG] = useState(true)
-    const [checkedTypeH, setCheckedTypeH] = useState(true)
 
     useEffect(() => {
+        console.log(UserStore.userId)
+        console.log(UserStore.role)
+        console.log(UserStore.isAuth)
         UserStore.setIsWorking(localStorage.getItem('isWorking'))
         UserStore.setWorkingWindow(localStorage.getItem('workingWindow'))
+        BankWindowStore.setSelectedTalonId(localStorage.getItem('selectedTalonId'))
+        BankWindowStore.setSelectedTalon(localStorage.getItem('selectedTalon'))
         getAllBankWindows('number', 'asc').then(data => BankWindowStore.setBankWindows(data))
+        getCashierIdByUserId(UserStore.userId)
+        .then(cashierId => getServiceIdsByCashierId(cashierId)
+        .then(serviceIds => getAllTalons(serviceIds)
+        .then(async talons => {
+            let talonsWithTypes = await Promise.all(talons.map(async talon => {
+                const types = await getTypesByServiceIds(talon.serviceId); talon.type = types[0]; return talon
+            })); 
+            TalonStore.setTalons(talonsWithTypes)
+        })))
     }, [])
 
     async function bankWindowButtonHandler(e) {
@@ -290,8 +284,22 @@ const EmployeePage = observer(() => {
         navigate('/')
     }
 
-    async function talonSelectionButtonHandler() {
+    function talonSelectionButtonHandler() {
         setShowTalonSelectionWindow(true)
+    }
+
+    async function selectTalonButtonHandler(id, bankWindowId, type, number) {
+        BankWindowStore.selectedTalonId.length != 0 && setTalonIsActualFalse(id)
+        setTalonBankWindowId(id, bankWindowId)
+        .then(BankWindowStore.setSelectedTalonId(id))
+        .then(BankWindowStore.setSelectedTalon(`${type}-${number}`))
+        .then(localStorage.setItem('selectedTalonId', id))
+        .then(localStorage.setItem('selectedTalon', `${type}-${number}`))
+        .then(setShowTalonSelectionWindow(false))
+    }
+
+    function exitToWorkingWindowButtonHandler() {
+        setShowTalonSelectionWindow(false)
     }
 
     async function quitButtonHandler() {
@@ -300,39 +308,6 @@ const EmployeePage = observer(() => {
         localStorage.setItem('workingWindow', 'null')
         UserStore.setIsWorking('false')
         UserStore.setWorkingWindow('null')
-    }
-
-    function checkerHandler(e) {
-        e.target.value == 'A' && setCheckedTypeA(e.target.checked);
-        e.target.value == 'B' && setCheckedTypeB(e.target.checked)
-        e.target.value == 'C' && setCheckedTypeC(e.target.checked)
-        e.target.value == 'D' && setCheckedTypeD(e.target.checked)
-        e.target.value == 'E' && setCheckedTypeE(e.target.checked)
-        e.target.value == 'F' && setCheckedTypeF(e.target.checked)
-        e.target.value == 'G' && setCheckedTypeG(e.target.checked)
-        e.target.value == 'H' && setCheckedTypeH(e.target.checked)
-        const types = []
-        checkedTypeA && types.push('A')
-        checkedTypeB && types.push('B')
-        checkedTypeC && types.push('C')
-        checkedTypeD && types.push('D')
-        checkedTypeE && types.push('E')
-        checkedTypeF && types.push('F')
-        checkedTypeG && types.push('G')
-        checkedTypeH && types.push('H')
-        console.log(types)
-    }
-
-    function selectedTypes() {
-        const types = []
-        checkedTypeA && types.push('A')
-        checkedTypeB && types.push('B')
-        checkedTypeC && types.push('C')
-        checkedTypeD && types.push('D')
-        checkedTypeE && types.push('E')
-        checkedTypeF && types.push('F')
-        checkedTypeG && types.push('G')
-        checkedTypeH && types.push('H')
     }
 
     return (
@@ -368,32 +343,18 @@ const EmployeePage = observer(() => {
             {UserStore.isWorking == 'true' ?
             <WorkplaceContainer>
                 {showTalonSelectionWindow ? 
-                <TalonSelectionGrid>
-                    <TypesOfTalonsContainer>
-                        <TypesOfTalonsBackground elevation={9}>
-                            <TypesOfTalonsTitle>Типы талонов</TypesOfTalonsTitle>
-                            <TypesOfTalonsFormGroup>
-                                <FormControlLabel control={<Checkbox disableRipple value={'A'} checked={checkedTypeA} onChange={(e) => checkerHandler(e)} />} label='A' />
-                                <FormControlLabel control={<Checkbox disableRipple value={'B'} checked={checkedTypeB} onChange={(e) => checkerHandler(e)} />} label='B' />
-                                <FormControlLabel control={<Checkbox disableRipple value={'C'} checked={checkedTypeC} onChange={(e) => checkerHandler(e)} />} label='C' />
-                                <FormControlLabel control={<Checkbox disableRipple value={'D'} checked={checkedTypeD} onChange={(e) => checkerHandler(e)} />} label='D' />
-                                <FormControlLabel control={<Checkbox disableRipple value={'E'} checked={checkedTypeE} onChange={(e) => checkerHandler(e)} />} label='E' />
-                                <FormControlLabel control={<Checkbox disableRipple value={'F'} checked={checkedTypeF} onChange={(e) => checkerHandler(e)} />} label='F' />
-                                <FormControlLabel control={<Checkbox disableRipple value={'G'} checked={checkedTypeG} onChange={(e) => checkerHandler(e)} />} label='G' />
-                                <FormControlLabel control={<Checkbox disableRipple value={'H'} checked={checkedTypeH} onChange={(e) => checkerHandler(e)} />} label='H' />
-                            </TypesOfTalonsFormGroup>
-                        </TypesOfTalonsBackground>
-                        <Box/>
-                    </TypesOfTalonsContainer>
-                    <SelectTalonBackground elevation={9}>
+                <SelectTalonWindowContainer elevation={9}>
+                    <Box/>
+                    <SelectTalonContainer>
                         <SelectTalonTitle>Выберите талон</SelectTalonTitle>
-                        {talons.map(talon =>
-                            <TalonButton disableRipple variant='outlined' onClick={talonSelectionButtonHandler}>
+                        {TalonStore.talons.map(talon => talon.isActual == true &&
+                            <TalonButton disableRipple variant='outlined' onClick={() => selectTalonButtonHandler(talon.id, UserStore.workingWindow, talon.type, talon.number)}>
                                 {`${talon.type}-${talon.number}`}
                             </TalonButton>)
                         }
-                    </SelectTalonBackground>
-                </TalonSelectionGrid> :
+                    </SelectTalonContainer>
+                    <ExitToWorkingWindowButton disableRipple onClick={exitToWorkingWindowButtonHandler}>Вернуться на рабочее место</ExitToWorkingWindowButton>
+                </SelectTalonWindowContainer> :
                 <WorkingWindowContainer elevation={9}>
                     <WorkingWindowGrid>
                         <Box/>
@@ -402,8 +363,8 @@ const EmployeePage = observer(() => {
                         <Box/>
                         <ShutdownButton disableRipple variant='outlined' onClick={quitButtonHandler}>Завершить работу</ShutdownButton>
                     </WorkingWindowGrid>
-                    <Status>В данный момент вы не обслуживаете талон</Status>
-                    <SelectTalonButton disableRipple variant='outlined' onClick={talonSelectionButtonHandler}>Выбрать талон</SelectTalonButton>
+                    <Status>{BankWindowStore.selectedTalon.length != 0 ? `В данный момент вы обслуживаете талон ${BankWindowStore.selectedTalon}` : 'В данный момент вы не обслуживаете талон'}</Status>
+                    <SelectTalonButton disableRipple variant='outlined' onClick={talonSelectionButtonHandler}>{BankWindowStore.selectedTalon.length != 0 ? 'Выбрать другой талон' : 'Выбрать талон'}</SelectTalonButton>
                 </WorkingWindowContainer>}
             </WorkplaceContainer> : 
             <SelectWindowContainer>
@@ -428,4 +389,4 @@ const EmployeePage = observer(() => {
     );
 });
 
-export default EmployeePage;
+export default CashierPage;

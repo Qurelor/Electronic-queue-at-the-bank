@@ -116,7 +116,7 @@ const HomePage = observer(() => {
     }
 
     function employeeButtonHandler() {
-        navigate('/employee')
+        navigate('/cashier')
     }
 
     function authButtonHandler() {
@@ -148,7 +148,7 @@ const HomePage = observer(() => {
                     {UserStore.role == 'USER' && <UserButton disableRipple variant='outlined' onClick={userButtonHandler}>Заказать талон</UserButton>}
                     <HeaderButtonsContainer>
                         {UserStore.role == 'ADMIN' && <AdminButton disableRipple variant='outlined' onClick={adminButtonHandler}>Админ панель</AdminButton>} 
-                        {UserStore.role == 'EMPLOYEE' && <EmployeeButton disableRipple variant='outlined' onClick={employeeButtonHandler}>Рабочее место</EmployeeButton>}
+                        {UserStore.role == 'CASHIER' && <EmployeeButton disableRipple variant='outlined' onClick={employeeButtonHandler}>Рабочее место</EmployeeButton>}
                         {UserStore.isAuth == 'true' ?
                         <Box>
                             <IconButton

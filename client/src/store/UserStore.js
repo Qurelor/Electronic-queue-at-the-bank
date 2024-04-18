@@ -1,11 +1,11 @@
 import {makeAutoObservable} from 'mobx';
 
 class UserStore {
-    userId = 'null'
-    role = 'null'
+    userId = ''
+    role = ''
     isAuth = 'false'
     isWorking = 'false'
-    workingWindow = 'null'
+    workingWindow = ''
     users = []
     constructor() {
         makeAutoObservable(this)

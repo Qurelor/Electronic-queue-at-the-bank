@@ -2,6 +2,8 @@ import {makeAutoObservable} from 'mobx';
 
 class BankWindowStore {
     bankWindows = []
+    selectedTalonId = ''
+    selectedTalon = ''
     constructor() {
         makeAutoObservable(this)
     }
@@ -12,6 +14,14 @@ class BankWindowStore {
 
     addBankWindow(bankWindow) {
         this.bankWindows.push(bankWindow)
+    }
+
+    setSelectedTalonId(selectedTalonId) {
+        this.selectedTalonId = selectedTalonId
+    }
+
+    setSelectedTalon(selectedTalon) {
+        this.selectedTalon = selectedTalon
     }
 }
 

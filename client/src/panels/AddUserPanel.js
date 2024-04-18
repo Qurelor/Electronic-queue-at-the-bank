@@ -1,6 +1,6 @@
 import Button from '@mui/material/Button';
 import Paper from '@mui/material/Paper';
-import {useState} from 'react';
+import {useState, useEffect} from 'react';
 import Typography from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
 import FormControl from '@mui/material/FormControl';
@@ -14,6 +14,16 @@ import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import Slide from '@mui/material/Slide';
 import { styled } from '@mui/material/styles';
+import {createCashier} from '../http/cashierAPI';
+import {EMAIL_REGEXP} from '../constants'
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import ServiceStore from '../store/ServiceStore';
+import {getAllServices} from '../http/serviceAPI';
+import FormGroup from '@mui/material/FormGroup';
+import Checkbox from '@mui/material/Checkbox';
+import {addServices} from '../http/cashierServiceAPI';
+import FormHelperText from '@mui/material/FormHelperText';
 
 const PanelContainer = styled(Paper)({
     width: '450px',
@@ -74,6 +84,63 @@ const RoleRadioGroup = styled(RadioGroup)({
     }
 })
 
+const CashierButton = styled(Button)({
+    backgroundColor: 'limegreen',
+    color: 'black',
+    textTransform: 'none',
+    fontSize: '15px',
+    borderColor: 'limegreen',
+    ':hover': {
+        borderColor: 'limegreen',
+        backgroundColor: 'black',
+        color: 'white'
+    },
+    minWidth: '100%'
+})
+
+const StyledTypography = styled(Typography)({
+    marginRight: 'auto'
+})
+
+const StyledDialog = styled(Dialog)({
+    '& .MuiDialog-paper': {
+        margin: '0px',
+        maxWidth: '100%',
+        paddingLeft: '20px',
+        paddingRight: '20px',
+        paddingBottom: '20px'
+    }
+})
+
+const StyledDialogTitle = styled(DialogTitle)({
+    '& .MuiDialogTitle-root': {
+        fontSize: '25px'
+    },
+})
+
+const StyledFormGroup = styled(FormGroup)({
+    '& .MuiTypography-root': {
+        fontSize: '15px'
+    }
+})
+
+const StyledCheckbox = styled(Checkbox)({
+    '&.Mui-checked': {
+        color: 'limegreen'
+    }
+})
+
+const StyledButton = styled(Button)({
+    backgroundColor: 'limegreen',
+    color: 'black',
+    ':hover': {
+        backgroundColor: 'black',
+        color: 'white'
+    },
+    marginTop: '20px',
+    fontSize: '15px'
+})
+
 const RegButton = styled(Button)({
     marginTop: '10px',
     fontSize: '25px',
@@ -98,16 +165,27 @@ const AddUserPanel = () => {
     const [emailErrorMessage, setEmailErrorMessage] = useState('')
     const [password, setPassword] = useState('')
     const [passwordErrorMessage, setPasswordErrorMessage] = useState('')
+    const [serviceErrorMessage, setServiceErrorMessage] = useState('')
     const [role, setRole] = useState('USER')
-    const [open, setOpen] = useState(false)
+    const [openDialog, setOpenDialog] = useState(false)
+    const typesTemp = {}
+    const [types, setTypes] = useState({})
+    const [confirmedTypes, setConfirmedTypes] = useState({})
+    const [selectedTypeIds, setSelectedTypeIds] = useState([])
+    const [selectedTypeNames, setSelectedTypeNames] = useState([])
+    const [openAlert, setOpenAlert] = useState(false)
 
-    const EMAIL_REGEXP = /^(([^<>()[\].,;:\s@"]+(\.[^<>()[\].,;:\s@"]+)*)|(".+"))@(([^<>()[\].,;:\s@"]+\.)+[^<>()[\].,;:\s@"]{2,})$/iu;
+    useEffect(() => {
+        getAllServices('id', 'asc').then((data) => {ServiceStore.setServices(data); return ServiceStore.services})
+            .then(services => {services.map(service => typesTemp[`${service.type}`] = false); return typesTemp})
+            .then(typesTemp => {setTypes(typesTemp); setConfirmedTypes(typesTemp)})
+    }, [])
 
     function checkName() {
-        if(name.length == 0){
+        if (name.length == 0) {
             setNameErrorMessage('Введите имя')
             return false
-        } else if (name.length > 20){
+        } else if (name.length > 20) {
             setNameErrorMessage('Имя должно содержать до 20 символов')
             return false
         } else {
@@ -117,10 +195,10 @@ const AddUserPanel = () => {
     }
 
     function checkSurname() {
-        if(surname.length == 0){
+        if (surname.length == 0) {
             setSurnameErrorMessage('Введите фамилию')
             return false
-        } else if (surname.length > 20){
+        } else if (surname.length > 20) {
             setSurnameErrorMessage('Фамилия должна содержать до 20 символов')
             return false
         } else {
@@ -130,7 +208,7 @@ const AddUserPanel = () => {
     }
 
     function checkPatronymic() {
-        if(patronymic.length > 20){
+        if (patronymic.length > 20) {
             setPatronymicErrorMessage('Отчество должно содержать до 20 символов')
             return false
         } else {
@@ -140,13 +218,13 @@ const AddUserPanel = () => {
     }
 
     function checkEmail() {
-        if(email.length == 0){
+        if (email.length == 0) {
             setEmailErrorMessage('Введите адрес электронной почты')
             return false
-        } else if (!EMAIL_REGEXP.test(email)){
+        } else if (!EMAIL_REGEXP.test(email)) {
             setEmailErrorMessage('Некорректный адрес электронной почты')
             return false
-        } else if (email.length < 6 || email.length > 30){
+        } else if (email.length < 6 || email.length > 30) {
             setEmailErrorMessage('Адрес электронной почты должен содержать от 6 до 30 символов')
             return false
         } else {
@@ -156,10 +234,10 @@ const AddUserPanel = () => {
     }
 
     function checkPassword() {
-        if(password.length == 0){
+        if (password.length == 0) {
             setPasswordErrorMessage('Введите пароль')
             return false
-        } else if (password.length < 6 || password.length > 30){
+        } else if (password.length < 6 || password.length > 30) {
             setPasswordErrorMessage('Пароль должен содержать от 6 до 30 символов')
             return false
         } else {
@@ -168,20 +246,17 @@ const AddUserPanel = () => {
         }
     }
 
-    async function regButtonHandler() {
-        checkName()
-        checkSurname()
-        checkPatronymic()
-        checkEmail()
-        checkPassword()
-        if(checkName() && checkSurname() && checkPatronymic() && checkEmail() && checkPassword()){
-            const user = await registration((patronymic.length > 0) ? `${surname} ${name} ${patronymic}` : `${surname} ${name}`, email, password, role)
-            if(user == 'Пользователь с таким адресом электронной почты уже существует'){
-                setEmailErrorMessage(user)
-            }else{
-                UserStore.addUser(user)
-                setOpen(true)
+    function checkServices() {
+        if(role == 'CASHIER'){
+            if(selectedTypeNames.length == 0) {
+                setServiceErrorMessage('Выберите услуги')
+                return false
+            } else {
+                setServiceErrorMessage('')
+                return true
             }
+        }else{
+            return true
         }
     }
 
@@ -189,8 +264,64 @@ const AddUserPanel = () => {
         setRole(e.target.value)
     }
 
+    const handleClickOpenDialog = () => {
+        setOpenDialog(true);
+    };
+    
+    const handleCloseDialog = () => {
+        setOpenDialog(false);
+        setTypes(confirmedTypes)
+    };
+
+    function typeCheckboxHandler(e) {
+        setTypes({...types, [e.target.name]: e.target.checked})
+    }
+
+    function confirmButtonHandler() {
+        setConfirmedTypes(types)
+        let tempIdArray = []
+        let tempNameArray = []
+        ServiceStore.services.map(service => types[`${service.type}`] && tempIdArray.push(service.id) && tempNameArray.push(service.type))
+        setSelectedTypeIds(tempIdArray)
+        setSelectedTypeNames(tempNameArray)
+        setOpenDialog(false);
+    }
+
+    async function regButtonHandler() {
+        checkName()
+        checkSurname()
+        checkPatronymic()
+        checkEmail()
+        checkPassword()
+        checkServices()
+        if (checkName() && checkSurname() && checkPatronymic() && checkEmail() && checkPassword() && checkServices()) {
+            const user = await registration((patronymic.length > 0) ? `${surname} ${name} ${patronymic}` : `${surname} ${name}`, email, password, role)
+            if (user == 'Пользователь с таким адресом электронной почты уже существует') {
+                setEmailErrorMessage(user)
+            } else {
+                if(user.role == 'CASHIER') {
+                    const cashier = await createCashier(user.id)
+                    console.log(selectedTypeIds)
+                    await addServices(cashier.id, selectedTypeIds)
+                }
+                UserStore.addUser(user)
+                setName('')
+                setSurname('')
+                setPatronymic('')
+                setEmail('')
+                setPassword('')
+                setRole('USER')
+                setTypes(typesTemp)
+                setConfirmedTypes(typesTemp)
+                setSelectedTypeNames([])
+                setSelectedTypeIds([])
+                setOpenAlert(true)
+            }
+        }
+    }
+
     function handleCloseAlert() {
-        setOpen(false)
+        setOpenAlert(false)
     }
 
     return (
@@ -198,6 +329,7 @@ const AddUserPanel = () => {
                 <Title>Создание пользователя</Title>
                 <PanelTextField 
                     label='Имя' 
+                    value={name}
                     onChange={e => setName(e.target.value)} 
                     error={nameErrorMessage.length == 0 ? false : true} 
                     helperText={nameErrorMessage.length == 0 ? false : nameErrorMessage} 
@@ -206,6 +338,7 @@ const AddUserPanel = () => {
                 />
                 <PanelTextField 
                     label='Фамилия'
+                    value={surname}
                     onChange={e => setSurname(e.target.value)} 
                     error={surnameErrorMessage.length == 0 ? false : true} 
                     helperText={surnameErrorMessage.length == 0 ? false : surnameErrorMessage} 
@@ -214,6 +347,7 @@ const AddUserPanel = () => {
                 />
                 <PanelTextField 
                     label='Отчество (необязательно)' 
+                    value={patronymic}
                     onChange={e => setPatronymic(e.target.value)} 
                     error={patronymicErrorMessage.length == 0 ? false : true} 
                     helperText={patronymicErrorMessage.length == 0 ? false : patronymicErrorMessage} 
@@ -222,6 +356,7 @@ const AddUserPanel = () => {
                 />
                 <PanelTextField 
                     label='Адрес электронной почты' 
+                    value={email}
                     onChange={e => setEmail(e.target.value)} 
                     error={emailErrorMessage.length == 0 ? false : true} 
                     helperText={emailErrorMessage.length == 0 ? false : emailErrorMessage} 
@@ -230,6 +365,7 @@ const AddUserPanel = () => {
                 />
                 <PanelTextField 
                     label='Пароль'
+                    value={password}
                     onChange={e => setPassword(e.target.value)} 
                     error={passwordErrorMessage.length == 0 ? false : true} 
                     helperText={passwordErrorMessage.length == 0 ? false : passwordErrorMessage} 
@@ -242,13 +378,27 @@ const AddUserPanel = () => {
                         value={role}
                         onChange={handleChangeRole}
                     >
-                        <FormControlLabel value='ADMIN' control={<Radio />} label='Администратор'/>
-                        <FormControlLabel value='EMPLOYEE' control={<Radio />} label='Работник банка'/>
-                        <FormControlLabel value='USER' control={<Radio />} label='Пользователь'/>
+                        <FormControlLabel value='ADMIN' control={<Radio/>} label='Администратор'/>
+                        <FormControlLabel value='CASHIER' control={<Radio/>} label='Кассир'/>
+                        <FormControlLabel value='USER' control={<Radio/>} label='Пользователь'/>
                     </RoleRadioGroup>
                 </RoleFormControl>
+                {role == 'CASHIER' && <CashierButton disableRipple onClick={handleClickOpenDialog}>Выберите услуги за которые отвечает кассир</CashierButton>}
+                {role == 'CASHIER' && selectedTypeNames.length != 0 && <StyledTypography>Выбрано: {selectedTypeNames.join(', ')}.</StyledTypography>}
+                {serviceErrorMessage.length > 0 && (<FormHelperText error>
+                        {serviceErrorMessage}
+                </FormHelperText>)}
                 <RegButton disableRipple variant='contained' onClick={regButtonHandler}>Создать пользователя</RegButton>
-                <Snackbar open={open} autoHideDuration={6000} onClose={handleCloseAlert} TransitionComponent={Slide}>
+                <StyledDialog onClose={handleCloseDialog} open={openDialog}>
+                    <StyledDialogTitle>Услуги за которые отвечает кассир:</StyledDialogTitle>
+                    <StyledFormGroup>
+                        {ServiceStore.services.map(service =>
+                            <FormControlLabel control={<StyledCheckbox checked={types[`${service.type}`]} onClick={typeCheckboxHandler} name={`${service.type}`}/>} label={`(${service.type})${service.description}`}/>
+                        )}
+                        <StyledButton disableRipple onClick={confirmButtonHandler}>Выбрать</StyledButton>
+                    </StyledFormGroup>
+                </StyledDialog>
+                <Snackbar open={openAlert} autoHideDuration={6000} onClose={handleCloseAlert} TransitionComponent={Slide}>
                     <Alert
                         severity='success'
                         variant='filled'

@@ -1,5 +1,5 @@
 import Box from '@mui/material/Box';
-import {useState} from 'react';
+import {useState, useEffect} from 'react';
 import {observer} from 'mobx-react-lite';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
@@ -14,15 +14,18 @@ import MenuItem from '@mui/material/MenuItem';
 import { useNavigate } from 'react-router-dom';
 import Button from '@mui/material/Button';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import {getMaxNumberByType, createTalon} from '../http/talonAPI';
+import {getTalonMaxNumberByServiceId, createTalon} from '../http/talonAPI';
 import { styled } from '@mui/material/styles';
+import ServiceStore from '../store/ServiceStore';
+import {getAllServices} from '../http/serviceAPI';
+import {getTypesByServiceIds} from '../http/serviceAPI';
 
 const PageContainer = styled(Box)({
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     backgroundColor: 'limegreen',
-    height: '100%'
+    minHeight: '100vh'
 })
 
 const Header = styled(AppBar)({
@@ -161,7 +164,8 @@ const ServiceButton = styled(Button)({
         backgroundColor: 'white', 
         border: '5px solid black', 
         color: 'black'
-    }
+    },
+    textTransform: 'none'
 })
 
 const UserPage = observer(() => {
@@ -170,6 +174,10 @@ const UserPage = observer(() => {
     const [anchorEl, setAnchorEl] = useState(null);
     const [messageActive, setMessageActive] = useState(false)
     const [talonNumber, setTalonNumber] = useState('')
+
+    useEffect(() => {
+        getAllServices('id', 'asc').then((data) => ServiceStore.setServices(data))
+    }, [])
     
     function handleMenu(e) {
         setAnchorEl(e.currentTarget)
@@ -189,17 +197,16 @@ const UserPage = observer(() => {
         navigate('/')
     }
 
-    async function talonButtonHandler(typeOfTalon) {
+    async function talonButtonHandler(serviceId) {
         setMessageActive(true)
-        const maxNumber = await getMaxNumberByType(typeOfTalon)
-        if(maxNumber == null) {
-            await createTalon(typeOfTalon, 1, UserStore.userId)
-            setTalonNumber(`${typeOfTalon}-1`)
-        }else{
-            await createTalon(typeOfTalon, Number(maxNumber)+1, UserStore.userId)
-            setTalonNumber(`${typeOfTalon}-${(Number(maxNumber)+1)}`)
-            console.log(maxNumber)
-            console.log(Number(maxNumber)+1)
+        const maxNumber = await getTalonMaxNumberByServiceId(serviceId)
+        const types = await getTypesByServiceIds(serviceId)
+        if (maxNumber == null) {
+            await createTalon(1, serviceId, UserStore.userId)
+            setTalonNumber(`${types[0]}-1`)
+        } else {
+            await createTalon(Number(maxNumber)+1, serviceId, UserStore.userId)
+            setTalonNumber(`${types[0]}-${(Number(maxNumber)+1)}`)
         }
     }
 
@@ -260,22 +267,10 @@ const UserPage = observer(() => {
                         <ServiceTitle>Выберите услугу</ServiceTitle>
                 </ServiceTitleBackground>
                 <ServiceButtonsContainer>
-                    <ServiceButton disableRipple component={Paper} elevation={9} onClick={() => talonButtonHandler('A')}>Банковский перевод</ServiceButton>
-                    <ServiceButton disableRipple component={Paper} elevation={9} onClick={() => talonButtonHandler('A')}>Закрытие счета с БПК</ServiceButton>
-                    <ServiceButton disableRipple component={Paper} elevation={9} onClick={() => talonButtonHandler('B')}>Консультация, открытие вклада</ServiceButton>
-                    <ServiceButton disableRipple component={Paper} elevation={9} onClick={() => talonButtonHandler('B')}>Консультация, оформление карточки</ServiceButton>
-                    <ServiceButton disableRipple component={Paper} elevation={9} onClick={() => talonButtonHandler('C')}>Консультация, оформление потребительского кредита</ServiceButton>
-                    <ServiceButton disableRipple component={Paper} elevation={9} onClick={() => talonButtonHandler('C')}>Оформление доверенностей/завещаний</ServiceButton>
-                    <ServiceButton disableRipple component={Paper} elevation={9} onClick={() => talonButtonHandler('D')}>Оформление справок, выписок</ServiceButton>
-                    <ServiceButton disableRipple component={Paper} elevation={9} onClick={() => talonButtonHandler('D')}>Покупка/продажа облигаций Банка</ServiceButton>
-                    <ServiceButton disableRipple component={Paper} elevation={9} onClick={() => talonButtonHandler('E')}>Получение карточки, изъятой из банкомата</ServiceButton>
-                    <ServiceButton disableRipple component={Paper} elevation={9} onClick={() => talonButtonHandler('E')}>Получение/замена карты</ServiceButton>
-                    <ServiceButton disableRipple component={Paper} elevation={9} onClick={() => talonButtonHandler('F')}>Прием и выдача наличных</ServiceButton>
-                    <ServiceButton disableRipple component={Paper} elevation={9} onClick={() => talonButtonHandler('F')}>Проверка подлинности банкнот</ServiceButton>
-                    <ServiceButton disableRipple component={Paper} elevation={9} onClick={() => talonButtonHandler('G')}>Продажа слитком, монет</ServiceButton>
-                    <ServiceButton disableRipple component={Paper} elevation={9} onClick={() => talonButtonHandler('G')}>Снятие наличных без карты</ServiceButton>
-                    <ServiceButton disableRipple component={Paper} elevation={9} onClick={() => talonButtonHandler('H')}>Юрлица - Переоформление счета / карточки с образцами подписей</ServiceButton>
-                    <ServiceButton disableRipple component={Paper} elevation={9} onClick={() => talonButtonHandler('H')}>Юрлица - Эквайринг</ServiceButton>
+                    {ServiceStore.services.map(service => 
+                        <ServiceButton disableRipple component={Paper} elevation={9} onClick={() => {talonButtonHandler(service.id)}}>
+                            {service.description}
+                        </ServiceButton>)}
                 </ServiceButtonsContainer>
             </ServiceContainer>}
         </PageContainer>

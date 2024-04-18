@@ -3,7 +3,7 @@ const {BankWindow} = require('../models/bankWindowModel')
 class BankWindowController {
     async create(req, res) {
         const {number} = req.body
-        if(await BankWindow.findOne({where: {number}})){
+        if (await BankWindow.findOne({where: {number}})) {
             return res.send('Окно с таким номером уже существует')
         }
         const bankWindow = await BankWindow.create({number})

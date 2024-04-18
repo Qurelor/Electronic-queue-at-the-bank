@@ -8,7 +8,6 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import TableSortLabel from '@mui/material/TableSortLabel';
-import UserStore from '../store/UserStore';
 import BankWindowStore from '../store/BankWindowStore';
 import {observer} from 'mobx-react-lite';
 import { styled } from '@mui/material/styles';
@@ -77,15 +76,15 @@ const BankWindowsPanel = observer(() => {
         setSortNumberDirection('asc')
         setSortUserIdActive(false)
         setSortUserIdDirection('asc')
-        if(sortIdDirection == 'asc' && sortIdActive == false) {
+        if (sortIdDirection == 'asc' && sortIdActive == false) {
             setSortIdActive(true)
             await getAllBankWindows('id', 'asc').then(data => BankWindowStore.setBankWindows(data))
         }
-        if(sortIdDirection == 'asc' && sortIdActive == true){
+        if (sortIdDirection == 'asc' && sortIdActive == true) {
             setSortIdDirection('desc')
             await getAllBankWindows('id', 'desc').then(data => BankWindowStore.setBankWindows(data))
         }
-        if(sortIdDirection == 'desc'){
+        if (sortIdDirection == 'desc') {
             setSortIdDirection('asc')
             setSortIdActive(false)
             await getAllBankWindows('id', 'asc').then(data => BankWindowStore.setBankWindows(data))
@@ -97,15 +96,15 @@ const BankWindowsPanel = observer(() => {
         setSortIdDirection('asc')
         setSortUserIdActive(false)
         setSortUserIdDirection('asc')
-        if(sortNumberDirection == 'asc' && sortNumberActive == false) {
+        if (sortNumberDirection == 'asc' && sortNumberActive == false) {
             setSortNumberActive(true)
             await getAllBankWindows('number', 'asc').then(data => BankWindowStore.setBankWindows(data))
         }
-        if(sortNumberDirection == 'asc' && sortNumberActive == true){
+        if (sortNumberDirection == 'asc' && sortNumberActive == true) {
             setSortNumberDirection('desc')
             await getAllBankWindows('number', 'desc').then(data => BankWindowStore.setBankWindows(data))
         }
-        if(sortNumberDirection == 'desc'){
+        if (sortNumberDirection == 'desc') {
             setSortNumberDirection('asc')
             setSortNumberActive(false)
             await getAllBankWindows('id', 'asc').then(data => BankWindowStore.setBankWindows(data))
@@ -117,15 +116,15 @@ const BankWindowsPanel = observer(() => {
         setSortIdDirection('asc')
         setSortNumberActive(false)
         setSortNumberDirection('asc')
-        if(sortUserIdDirection == 'asc' && sortUserIdActive == false) {
+        if (sortUserIdDirection == 'asc' && sortUserIdActive == false) {
             setSortUserIdActive(true)
             await getAllBankWindows('userId', 'asc').then(data => BankWindowStore.setBankWindows(data))
         }
-        if(sortUserIdDirection == 'asc' && sortUserIdActive == true){
+        if (sortUserIdDirection == 'asc' && sortUserIdActive == true) {
             setSortUserIdDirection('desc')
             await getAllBankWindows('userId', 'desc').then(data => BankWindowStore.setBankWindows(data))
         }
-        if(sortUserIdDirection == 'desc'){
+        if (sortUserIdDirection == 'desc') {
             setSortUserIdDirection('asc')
             setSortUserIdActive(false)
             await getAllBankWindows('id', 'asc').then(data => BankWindowStore.setBankWindows(data))

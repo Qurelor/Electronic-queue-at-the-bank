@@ -1,18 +1,26 @@
 import {$host} from './index';
 
-export const createTalon = async (type, number, userId) => {
-    const {data} = await $host.post('api/talon/create', {type, number, userId})
+export const createTalon = async (number, serviceId, userId) => {
+    const {data} = await $host.post('api/talon/create', {number, serviceId, userId})
     return data
 }
 
-export const getMaxNumberByType = async (number) => {
-    const {data} = await $host.get(`api/talon/getMaxNumberByType/${number}`)
+export const getTalonMaxNumberByServiceId = async (serviceId) => {
+    const {data} = await $host.get(`api/talon/getMaxNumberByServiceId/${serviceId}`)
     return data
 }
 
-export const getAllTalons = async (types) => {
-    const {data} = await $host.get('api/user/getAllTalons', {params: {
-        types
-    }})
+export const getAllTalons = async (serviceIds) => {
+    const {data} = await $host.get(`api/talon/getAll/${serviceIds}`)
+    return data
+}
+
+export const setTalonBankWindowId = async (id, bankWindowId) => {
+    const {data} = await $host.post('api/talon/setBankWindowId', {id, bankWindowId})
+    return data
+}
+
+export const setTalonIsActualFalse = async (id) => {
+    const {data} = await $host.post('api/talon/setIsActual', {id})
     return data
 }

@@ -3,7 +3,7 @@ import HomePage from '../pages/HomePage'
 import AuthPage from '../pages/AuthPage'
 import RegPage from '../pages/RegPage'
 import AdminPage from '../pages/AdminPage'
-import EmployeePage from '../pages/EmployeePage'
+import CashierPage from '../pages/CashierPage'
 import UserPage from '../pages/UserPage'
 import UserStore from '../store/UserStore';
 import {useEffect} from 'react'
@@ -24,7 +24,7 @@ const AppRouter = observer(() => {
                 <Route path='/auth' Component={AuthPage}/>
                 <Route path='/reg' Component={RegPage}/>
                 {UserStore.isAuth == 'true' && UserStore.role == 'ADMIN' && <Route path='/admin' Component={AdminPage}/>}
-                {UserStore.isAuth == 'true' && UserStore.role == 'EMPLOYEE' && <Route path='/employee' Component={EmployeePage}/>}
+                {UserStore.isAuth == 'true' && UserStore.role == 'CASHIER' && <Route path='/cashier' Component={CashierPage}/>}
                 {UserStore.isAuth == 'true' && UserStore.role == 'USER' && <Route path='/user' Component={UserPage}/>}
             </Routes>
         </div>

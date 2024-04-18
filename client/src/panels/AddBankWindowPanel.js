@@ -3,13 +3,6 @@ import Paper from '@mui/material/Paper';
 import {useState} from 'react';
 import Typography from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
-import FormControl from '@mui/material/FormControl';
-import {registration} from '../http/userAPI';
-import FormLabel from '@mui/material/FormLabel';
-import RadioGroup from '@mui/material/RadioGroup';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Radio from '@mui/material/Radio';
-import UserStore from '../store/UserStore';
 import BankWindowStore from '../store/BankWindowStore';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
@@ -65,14 +58,14 @@ const AddBankWindowButton = styled(Button)({
     }
 })
 
-const AddUserPanel = () => {
+const AddBankWindowPanel = () => {
 
-    const [number, setNumber] = useState(0)
+    const [number, setNumber] = useState('')
     const [numberErrorMessage, setNumberErrorMessage] = useState('')
     const [open, setOpen] = useState(false)
 
     function checkNumber() {
-        if (!Number.isInteger(Number(number)) || Number(number) < 1){
+        if (!Number.isInteger(Number(number)) || Number(number) < 1) {
             setNumberErrorMessage('Номер окна должен быть целым положительным числом')
             return false
         } else {
@@ -83,12 +76,13 @@ const AddUserPanel = () => {
 
     async function addBankWindowButtonHandler() {
         checkNumber()
-        if(checkNumber()){
-            const bankWindow = await createBankWindow(number)
-            if(bankWindow == 'Окно с таким номером уже существует'){
-                setNumberErrorMessage(bankWindow)
-            }else{
-                BankWindowStore.addBankWindow(bankWindow)
+        if (checkNumber()) {
+            const data = await createBankWindow(number)
+            if (data == 'Окно с таким номером уже существует') {
+                setNumberErrorMessage(data)
+            } else {
+                BankWindowStore.addBankWindow(data)
+                setNumber('')
                 setOpen(true)
             }
         }
@@ -103,6 +97,7 @@ const AddUserPanel = () => {
             <Title>Создание окна</Title>
             <PanelTextField 
                 label='Номер окна' 
+                value={number}
                 onChange={e => setNumber(e.target.value)} 
                 error={numberErrorMessage.length == 0 ? false : true} 
                 helperText={numberErrorMessage.length == 0 ? false : numberErrorMessage} 
@@ -122,4 +117,4 @@ const AddUserPanel = () => {
     );
 };
 
-export default AddUserPanel;
+export default AddBankWindowPanel;

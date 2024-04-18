@@ -16,6 +16,8 @@ import AccountCircle from '@mui/icons-material/AccountCircle';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import { styled } from '@mui/material/styles';
+import AddServicePanel from '../panels/AddServicePanel';
+import ServicesPanel from '../panels/ServicesPanel';
 
 const PageContainer = styled(Box)({
     display: 'flex',
@@ -133,12 +135,31 @@ const BankWindowsButton = styled(Button)({
     }
 })
 
+const ServicesButton = styled(Button)({
+    marginTop: '20px',
+    fontWeight: 'bold',
+    border: '2px solid',
+    color: 'limegreen',
+    backgroundColor: 'white',
+    borderColor: 'limegreen',
+    fontSize: '25px',
+    textTransform: 'none',
+    width: '50vw',
+    ':hover': {
+        border: '2px solid',
+        color: 'black',
+        borderColor: 'black',
+        backgroundColor: 'white'
+    }
+})
+
 const AdminPage = () => {
 
     const navigate = useNavigate();
     const [anchorEl, setAnchorEl] = useState(null);
     const [showUsersPanel, setShowUsersPanel] = useState(false);
     const [showBankWindowsPanel, setShowBankWindowsPanel] = useState(false);
+    const [showServicesPanel, setShowServicesPanel] = useState(false);
 
     function usersButtonHandler() {
         setShowUsersPanel(true)
@@ -147,10 +168,15 @@ const AdminPage = () => {
     function bankWindowsButtonHandler() {
         setShowBankWindowsPanel(true)
     }
+
+    function servicesButtonHandler() {
+        setShowServicesPanel(true)
+    }
     
     function adminButtonHandler() {
         setShowUsersPanel(false)
         setShowBankWindowsPanel(false)
+        setShowServicesPanel(false)
     }
     
     function handleMenu(e) {
@@ -202,24 +228,27 @@ const AdminPage = () => {
                     </HeaderButtonsContainer>
                 </HeaderContentContainer>
             </Header>
-            {(showUsersPanel || showBankWindowsPanel) && 
+            {(showUsersPanel || showBankWindowsPanel || showServicesPanel) && 
             <UsersAndBankWindowsContainer>
                 <Box>
                     {showUsersPanel && <AddUserPanel></AddUserPanel>}
                     {showBankWindowsPanel && <AddBankWindowPanel></AddBankWindowPanel>}
+                    {showServicesPanel && <AddServicePanel></AddServicePanel>}
                     <Box/>
                 </Box>
                 <Box>
                     {showUsersPanel && <UsersPanel></UsersPanel>}
                     {showBankWindowsPanel && <BankWindowsPanel></BankWindowsPanel>}
+                    {showServicesPanel && <ServicesPanel></ServicesPanel>}
                     <Box/>
                 </Box>
             </UsersAndBankWindowsContainer>}
-            {!showUsersPanel && !showBankWindowsPanel &&
+            {!showUsersPanel && !showBankWindowsPanel && !showServicesPanel &&
             <ButtonsContainer>
                 <BackgroundButtons elevation={9}>
                     <UsersButton disableRipple variant='outlined' onClick={usersButtonHandler}>Пользователи</UsersButton>
                     <BankWindowsButton disableRipple variant='outlined' onClick={bankWindowsButtonHandler}>Окна</BankWindowsButton>
+                    <ServicesButton disableRipple variant='outlined' onClick={servicesButtonHandler}>Услуги</ServicesButton>
                 </BackgroundButtons>
             </ButtonsContainer>}
         </PageContainer>

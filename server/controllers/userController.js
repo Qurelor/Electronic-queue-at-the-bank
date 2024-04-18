@@ -3,7 +3,7 @@ const {User} = require('../models/userModel')
 class UserController {
     async registration(req, res) {
         const {fullName, email, password, role} = req.body
-        if(await User.findOne({where: {email}})){
+        if (await User.findOne({where: {email}})) {
             return res.send('Пользователь с таким адресом электронной почты уже существует')
         }
         const user = await User.create({fullName, email, password, role})
@@ -13,7 +13,7 @@ class UserController {
     async auth(req, res) {
         const {email, password} = req.body
         const user = await User.findOne({where: {email}})
-        if(user){
+        if (user) {
             if (user.password == password) {
                 return res.json(user)
             }

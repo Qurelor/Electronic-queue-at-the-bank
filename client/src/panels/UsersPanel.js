@@ -84,15 +84,15 @@ const UsersPanel = observer(() => {
         setSortPasswordDirection('asc')
         setSortRoleActive(false)
         setSortRoleDirection('asc')
-        if(sortIdDirection == 'asc' && sortIdActive == false) {
+        if (sortIdDirection == 'asc' && sortIdActive == false) {
             setSortIdActive(true)
             await getAllUsers('id', 'asc').then(data => UserStore.setUsers(data))
         }
-        if(sortIdDirection == 'asc' && sortIdActive == true){
+        if (sortIdDirection == 'asc' && sortIdActive == true) {
             setSortIdDirection('desc')
             await getAllUsers('id', 'desc').then(data => UserStore.setUsers(data))
         }
-        if(sortIdDirection == 'desc'){
+        if (sortIdDirection == 'desc') {
             setSortIdDirection('asc')
             setSortIdActive(false)
             await getAllUsers('id', 'asc').then(data => UserStore.setUsers(data))
@@ -108,15 +108,15 @@ const UsersPanel = observer(() => {
         setSortPasswordDirection('asc')
         setSortRoleActive(false)
         setSortRoleDirection('asc')
-        if(sortFullNameDirection == 'asc' && sortFullNameActive == false) {
+        if (sortFullNameDirection == 'asc' && sortFullNameActive == false) {
             setSortFullNameActive(true)
             await getAllUsers('fullName', 'asc').then(data => UserStore.setUsers(data))
         }
-        if(sortFullNameDirection == 'asc' && sortFullNameActive == true){
+        if (sortFullNameDirection == 'asc' && sortFullNameActive == true) {
             setSortFullNameDirection('desc')
             await getAllUsers('fullName', 'desc').then(data => UserStore.setUsers(data))
         }
-        if(sortFullNameDirection == 'desc'){
+        if (sortFullNameDirection == 'desc') {
             setSortFullNameDirection('asc')
             setSortFullNameActive(false)
             await getAllUsers('id', 'asc').then(data => UserStore.setUsers(data))
@@ -132,15 +132,15 @@ const UsersPanel = observer(() => {
         setSortPasswordDirection('asc')
         setSortRoleActive(false)
         setSortRoleDirection('asc')
-        if(sortEmailDirection == 'asc' && sortEmailActive == false) {
+        if (sortEmailDirection == 'asc' && sortEmailActive == false) {
             setSortEmailActive(true)
             await getAllUsers('email', 'asc').then(data => UserStore.setUsers(data))
         }
-        if(sortEmailDirection == 'asc' && sortEmailActive == true){
+        if (sortEmailDirection == 'asc' && sortEmailActive == true) {
             setSortEmailDirection('desc')
             await getAllUsers('email', 'desc').then(data => UserStore.setUsers(data))
         }
-        if(sortEmailDirection == 'desc'){
+        if (sortEmailDirection == 'desc') {
             setSortEmailDirection('asc')
             setSortEmailActive(false)
             await getAllUsers('id', 'asc').then(data => UserStore.setUsers(data))
@@ -156,15 +156,15 @@ const UsersPanel = observer(() => {
         setSortEmailDirection('asc')
         setSortRoleActive(false)
         setSortRoleDirection('asc')
-        if(sortPasswordDirection == 'asc' && sortPasswordActive == false) {
+        if (sortPasswordDirection == 'asc' && sortPasswordActive == false) {
             setSortPasswordActive(true)
             await getAllUsers('password', 'asc').then(data => UserStore.setUsers(data))
         }
-        if(sortPasswordDirection == 'asc' && sortPasswordActive == true){
+        if (sortPasswordDirection == 'asc' && sortPasswordActive == true) {
             setSortPasswordDirection('desc')
             await getAllUsers('password', 'desc').then(data => UserStore.setUsers(data))
         }
-        if(sortPasswordDirection == 'desc'){
+        if (sortPasswordDirection == 'desc') {
             setSortPasswordDirection('asc')
             setSortPasswordActive(false)
             await getAllUsers('id', 'asc').then(data => UserStore.setUsers(data))
@@ -180,15 +180,15 @@ const UsersPanel = observer(() => {
         setSortEmailDirection('asc')
         setSortPasswordActive(false)
         setSortPasswordDirection('asc')
-        if(sortRoleDirection == 'asc' && sortRoleActive == false) {
+        if (sortRoleDirection == 'asc' && sortRoleActive == false) {
             setSortRoleActive(true)
             await getAllUsers('role', 'asc').then(data => UserStore.setUsers(data))
         }
-        if(sortRoleDirection == 'asc' && sortRoleActive == true){
+        if (sortRoleDirection == 'asc' && sortRoleActive == true) {
             setSortRoleDirection('desc')
             await getAllUsers('role', 'desc').then(data => UserStore.setUsers(data))
         }
-        if(sortRoleDirection == 'desc'){
+        if (sortRoleDirection == 'desc') {
             setSortRoleDirection('asc')
             setSortRoleActive(false)
             await getAllUsers('id', 'asc').then(data => UserStore.setUsers(data))
