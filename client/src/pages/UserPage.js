@@ -1,5 +1,5 @@
 import Box from '@mui/material/Box';
-import {useState, useEffect} from 'react';
+import React, {useState, useEffect} from 'react';
 import {observer} from 'mobx-react-lite';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
@@ -14,11 +14,26 @@ import MenuItem from '@mui/material/MenuItem';
 import { useNavigate } from 'react-router-dom';
 import Button from '@mui/material/Button';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import {getTalonMaxNumberByServiceId, createTalon} from '../http/talonAPI';
+import {getTalonMaxNumberByServiceId, createTalon, getUnservicedTalonByUserId} from '../http/talonAPI';
 import { styled } from '@mui/material/styles';
 import ServiceStore from '../store/ServiceStore';
 import {getAllServices} from '../http/serviceAPI';
 import {getTypesByServiceIds} from '../http/serviceAPI';
+import Snackbar from '@mui/material/Snackbar';
+import Slide from '@mui/material/Slide';
+import Alert from '@mui/material/Alert';
+import Backdrop from '@mui/material/Backdrop';
+import CircularProgress from '@mui/material/CircularProgress';
+
+const LoadingWindowContainer = styled(Box)({
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100vw',
+    height: '100vh',
+    color: 'limegreen',
+    backgroundColor: 'white'
+})
 
 const PageContainer = styled(Box)({
     display: 'flex',
@@ -45,7 +60,8 @@ const Logo = styled(Link)({
         color: 'black',
         backgroundColor: 'white'
     },
-    textDecoration: 'none'
+    textDecoration: 'none',
+    cursor: 'pointer'
 })
 
 const HeaderButtonsContainer = styled(Box)({
@@ -94,21 +110,6 @@ const ButtonsContainer = styled(Box)({
     alignItems: 'flex-end'
 })
 
-const TakeTalonAgainButton = styled(Button)({
-    fontWeight: 'bold',
-    border: '2px solid limegreen',
-    color: 'limegreen',
-    backgroundColor: 'white',
-    fontSize: '25px',
-    textTransform: 'none',
-    marginBottom: '20px',
-    ':hover': {
-        border: '2px solid black',
-        color: 'black',
-        backgroundColor: 'white'
-    }
-})
-
 const ExitToHomePageButton = styled(Button)({
     fontWeight: 'bold',
     border: '2px solid limegreen',
@@ -146,6 +147,8 @@ const ServiceTitle = styled(Typography)({
 })
 
 const ServiceButtonsContainer = styled(Box)({
+    display: 'flex',
+    flexDirection: 'column',
     marginTop: '20px',
     paddingLeft: '60px',
     paddingRight: '60px',
@@ -155,18 +158,25 @@ const ServiceButtonsContainer = styled(Box)({
 
 const ServiceButton = styled(Button)({
     backgroundColor: 'white',
-    width: '100%',
+    width: '80vw',
     fontSize: '30px',
     color: 'limegreen',
     justifyContent: 'left',
     paddingLeft: '20px',
+    border: '5px solid white',
     ':hover': {
         backgroundColor: 'white', 
         border: '5px solid black', 
         color: 'black'
     },
-    textTransform: 'none'
+    textTransform: 'none',
+    marginBottom: '5px'
 })
+
+const LoadingTalon = styled(Backdrop)(({theme}) => ({
+    color: 'limegreen',
+    zIndex: theme.zIndex.drawer + 1
+}))
 
 const UserPage = observer(() => {
 
@@ -174,10 +184,18 @@ const UserPage = observer(() => {
     const [anchorEl, setAnchorEl] = useState(null);
     const [messageActive, setMessageActive] = useState(false)
     const [talonNumber, setTalonNumber] = useState('')
+    const [openAlert, setOpenAlert] = useState(false)
+    const [isLoadingWindow, setIsLoadingWindow] = useState(false)
+    const [isLoadingTalon, setIsLoadingTalon] = useState(false)
 
     useEffect(() => {
-        getAllServices('id', 'asc').then((data) => ServiceStore.setServices(data))
+        setIsLoadingWindow(true)
+        getAllServices('id', 'asc').then((data) => ServiceStore.setServices(data)).finally(setIsLoadingWindow(false))
     }, [])
+
+    function logoButtonHandler() {
+        navigate('/')
+    }
     
     function handleMenu(e) {
         setAnchorEl(e.currentTarget)
@@ -198,31 +216,49 @@ const UserPage = observer(() => {
     }
 
     async function talonButtonHandler(serviceId) {
-        setMessageActive(true)
-        const maxNumber = await getTalonMaxNumberByServiceId(serviceId)
-        const types = await getTypesByServiceIds(serviceId)
-        if (maxNumber == null) {
-            await createTalon(1, serviceId, UserStore.userId)
-            setTalonNumber(`${types[0]}-1`)
+        setIsLoadingTalon(true)
+        const servicedTalon = await getUnservicedTalonByUserId(UserStore.userId)
+        if(servicedTalon){
+            setIsLoadingTalon(false)
+            setOpenAlert(true)
         } else {
-            await createTalon(Number(maxNumber)+1, serviceId, UserStore.userId)
-            setTalonNumber(`${types[0]}-${(Number(maxNumber)+1)}`)
+            const maxNumber = await getTalonMaxNumberByServiceId(serviceId)
+            const types = await getTypesByServiceIds(serviceId)
+            if (maxNumber == null) {
+                const talon = await createTalon(1, 'ожидание', serviceId, UserStore.userId)
+                talon.type = `${types[0]}`
+                UserStore.setLastTalon(talon)
+            } else {
+                const talon = await createTalon(Number(maxNumber)+1, 'ожидание', serviceId, UserStore.userId)
+                talon.type = `${types[0]}`
+                UserStore.setLastTalon(talon)
+            }
+            setIsLoadingTalon(false)
+            setMessageActive(true)
         }
-    }
-
-    function takeTalonAgainButtonHandler() {
-        setMessageActive(false)
     }
     
     function exitToHomePageButtonHandler() {
         navigate('/')
     }
 
+    function handleCloseAlert() {
+        setOpenAlert(false)
+    }
+
+    /*if(isLoadingWindow) {
+        return (
+            <LoadingWindowContainer>
+                <CircularProgress color="inherit" />
+            </LoadingWindowContainer>
+        )
+    }*/
+
     return (
         <PageContainer>
             <Header>
                 <HeaderContentContainer>
-                    <Logo href='/'>БЕЛБАНК</Logo>
+                    <Logo onClick={logoButtonHandler}>БЕЛБАНК</Logo>
                     <HeaderButtonsContainer>
                         <IconButton
                             onClick={handleMenu}
@@ -248,31 +284,49 @@ const UserPage = observer(() => {
                     </HeaderButtonsContainer>
                 </HeaderContentContainer>
             </Header>
-            {messageActive ?
-            <MessageContainer>
-                <MessageBackground elevation={9}>
-                    <Box />
-                    <TalonInfoContainer>
-                        <SuccessIcon/>
-                        Ваш талон: {talonNumber}
-                    </TalonInfoContainer>
-                    <ButtonsContainer>
-                        <TakeTalonAgainButton disableRipple variant='outlined' onClick={takeTalonAgainButtonHandler}>Взять еще один талон</TakeTalonAgainButton>
-                        <ExitToHomePageButton disableRipple variant='outlined' onClick={exitToHomePageButtonHandler}>Выйти</ExitToHomePageButton>
-                    </ButtonsContainer>
-                </MessageBackground>
-            </MessageContainer> :
-            <ServiceContainer>
-                <ServiceTitleBackground elevation={9}>
-                        <ServiceTitle>Выберите услугу</ServiceTitle>
-                </ServiceTitleBackground>
-                <ServiceButtonsContainer>
-                    {ServiceStore.services.map(service => 
-                        <ServiceButton disableRipple component={Paper} elevation={9} onClick={() => {talonButtonHandler(service.id)}}>
-                            {service.description}
-                        </ServiceButton>)}
-                </ServiceButtonsContainer>
-            </ServiceContainer>}
+            {isLoadingWindow ? 
+                <LoadingWindowContainer>
+                    <CircularProgress color='inherit'/>
+                </LoadingWindowContainer> : 
+                <React.Fragment>
+                    {messageActive ?
+                        <MessageContainer>
+                            <MessageBackground elevation={9}>
+                                <Box />
+                                <TalonInfoContainer>
+                                    <SuccessIcon/>
+                                    Ваш талон: {`${UserStore.lastTalon.type}-${UserStore.lastTalon.number}`}
+                                </TalonInfoContainer>
+                                <ButtonsContainer>
+                                    <ExitToHomePageButton disableRipple variant='outlined' onClick={exitToHomePageButtonHandler}>Вернуться на главную страницу</ExitToHomePageButton>
+                                </ButtonsContainer>
+                            </MessageBackground>
+                        </MessageContainer> :
+                        <ServiceContainer>
+                            <ServiceTitleBackground elevation={9}>
+                                <ServiceTitle>Выберите услугу</ServiceTitle>
+                            </ServiceTitleBackground>
+                            <ServiceButtonsContainer>
+                                {ServiceStore.services.map(service => 
+                                    <ServiceButton disableRipple component={Paper} elevation={9} onClick={() => {talonButtonHandler(service.id)}}>
+                                        {service.description}
+                                    </ServiceButton>)}
+                            </ServiceButtonsContainer>
+                        </ServiceContainer>}
+                    <LoadingTalon
+                        open={isLoadingTalon}
+                    >
+                        <CircularProgress color="inherit" />
+                    </LoadingTalon>
+                    <Snackbar open={openAlert} autoHideDuration={6000} onClose={handleCloseAlert} TransitionComponent={Slide}>
+                        <Alert
+                            severity='error'
+                            variant='filled'
+                        >
+                            У вас уже есть необслуженный талон! Дождитесь обслуживания или отмените талон для заказа нового.
+                        </Alert>
+                    </Snackbar>
+                </React.Fragment>}
         </PageContainer>
     );
 });

@@ -43,7 +43,8 @@ const Logo = styled(Link)({
         color: 'black',
         backgroundColor: 'white'
     },
-    textDecoration: 'none'
+    textDecoration: 'none',
+    cursor: 'pointer'
 })
 
 const HeaderButtonsContainer = styled(Box)({
@@ -161,6 +162,10 @@ const AdminPage = () => {
     const [showBankWindowsPanel, setShowBankWindowsPanel] = useState(false);
     const [showServicesPanel, setShowServicesPanel] = useState(false);
 
+    function logoButtonHandler() {
+        navigate('/')
+    }
+
     function usersButtonHandler() {
         setShowUsersPanel(true)
     }
@@ -201,7 +206,7 @@ const AdminPage = () => {
         <PageContainer>
             <Header>
                 <HeaderContentContainer>
-                    <Logo href='/'>БЕЛБАНК</Logo>
+                    <Logo onClick={logoButtonHandler}>БЕЛБАНК</Logo>
                     <HeaderButtonsContainer>
                         <AdminButton disableRipple variant='outlined' onClick={adminButtonHandler}>
                             Админ панель

@@ -5,7 +5,9 @@ class UserStore {
     role = ''
     isAuth = 'false'
     isWorking = 'false'
-    workingWindow = ''
+    workingWindowId = ''
+    workingWindowNumber = ''
+    lastTalon = ''
     users = []
     constructor() {
         makeAutoObservable(this)
@@ -27,8 +29,17 @@ class UserStore {
         this.isWorking = isWorking
     }
 
-    setWorkingWindow(workingWindow) {
-        this.workingWindow = workingWindow
+    setWorkingWindowId(workingWindowId) {
+        this.workingWindowId = workingWindowId
+    }
+
+
+    setWorkingWindowNumber(workingWindowNumber) {
+        this.workingWindowNumber = workingWindowNumber
+    }
+
+    setLastTalon(lastTalon) {
+        this.lastTalon = lastTalon
     }
 
     setUsers(users) {

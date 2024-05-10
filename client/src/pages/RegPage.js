@@ -46,7 +46,8 @@ const Logo = styled(Link)({
         color: 'black',
         backgroundColor: 'white'
     },
-    textDecoration: 'none'
+    textDecoration: 'none',
+    cursor: 'pointer'
 })
 
 const RegWindow = styled(Paper)({
@@ -146,6 +147,10 @@ const RegPage = () => {
     const [showPassword, setShowPassword] = useState(false)
     const [checkError, setCheckError] = useState(false)
 
+    function logoButtonHandler() {
+        navigate('/')
+    }
+
     function handleClickShowPassword() {
         setShowPassword((show) => !show)
     }
@@ -241,7 +246,7 @@ const RegPage = () => {
         <PageContainer>
             <Header>
                 <HeaderContentContainer>
-                    <Logo href='/'>БЕЛБАНК</Logo>
+                    <Logo onClick={logoButtonHandler}>БЕЛБАНК</Logo>
                 </HeaderContentContainer>
             </Header>
             <RegWindow elevation={9}>

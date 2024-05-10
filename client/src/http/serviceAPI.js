@@ -16,3 +16,18 @@ export const getTypesByServiceIds = async (ids) => {
     const {data} = await $host.get(`api/service/getTypesByIds/${ids}`)
     return data
 }
+
+export const setServiceCashierId = async (id, cashierId) => {
+    const {data} = await $host.post('api/service/setCashierId', {id, cashierId})
+    return data
+}
+
+export const getAllServicesWithoutCashier = async () => {
+    const {data} = await $host.get('api/service/getAllWithoutCashier')
+    return data
+}
+
+export const getServiceIdsByCashierId = async (cashierId) => {
+    const {data} = await $host.get(`api/service/getIdsByCashierId/${cashierId}`)
+    return data
+}

@@ -31,6 +31,25 @@ class ServiceController {
         services.map(service => typesArray.push(service.type))
         return res.json(typesArray)
     }
+
+    async setCashierId(req, res) {
+        const {id, cashierId} = req.body
+        const service = await Service.update({cashierId}, {where: {id}})
+        return res.json(service)
+    }
+
+    async getAllWithoutCashier(req, res) {
+        const services = await Service.findAll({where: {cashierId: null}})
+        return res.json(services)
+    }
+
+    async getIdsByCashierId(req, res) {
+        const {cashierId} = req.params
+        const services = await Service.findAll({where: {cashierId}})
+        const idsArray = []
+        services.map(service => idsArray.push(service.id))
+        return res.json(idsArray)
+    }
 }
 
 module.exports = new ServiceController()

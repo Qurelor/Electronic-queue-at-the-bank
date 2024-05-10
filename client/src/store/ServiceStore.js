@@ -13,6 +13,10 @@ class ServiceStore {
     addService(service) {
         this.services.push(service)
     }
+
+    deleteService(id) {
+        this.services = this.services.filter(service => service.id != id)
+    }
 }
 
 export default new ServiceStore()

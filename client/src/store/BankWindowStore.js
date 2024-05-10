@@ -4,6 +4,7 @@ class BankWindowStore {
     bankWindows = []
     selectedTalonId = ''
     selectedTalon = ''
+    status = ''
     constructor() {
         makeAutoObservable(this)
     }
@@ -22,6 +23,10 @@ class BankWindowStore {
 
     setSelectedTalon(selectedTalon) {
         this.selectedTalon = selectedTalon
+    }
+
+    setStatus(status) {
+        this.status = status
     }
 }
 

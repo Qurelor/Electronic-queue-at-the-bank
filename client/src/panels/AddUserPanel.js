@@ -19,11 +19,10 @@ import {EMAIL_REGEXP} from '../constants'
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import ServiceStore from '../store/ServiceStore';
-import {getAllServices} from '../http/serviceAPI';
+import {getAllServicesWithoutCashier, setServiceCashierId} from '../http/serviceAPI';
 import FormGroup from '@mui/material/FormGroup';
 import Checkbox from '@mui/material/Checkbox';
-import {addServices} from '../http/cashierServiceAPI';
-import FormHelperText from '@mui/material/FormHelperText';
+import Box from '@mui/material/Box';
 
 const PanelContainer = styled(Paper)({
     width: '450px',
@@ -130,6 +129,12 @@ const StyledCheckbox = styled(Checkbox)({
     }
 })
 
+const MessageBox = styled(Box)({
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center'
+})
+
 const StyledButton = styled(Button)({
     backgroundColor: 'limegreen',
     color: 'black',
@@ -176,7 +181,7 @@ const AddUserPanel = () => {
     const [openAlert, setOpenAlert] = useState(false)
 
     useEffect(() => {
-        getAllServices('id', 'asc').then((data) => {ServiceStore.setServices(data); return ServiceStore.services})
+        getAllServicesWithoutCashier('id', 'asc').then((data) => {ServiceStore.setServices(data); return ServiceStore.services})
             .then(services => {services.map(service => typesTemp[`${service.type}`] = false); return typesTemp})
             .then(typesTemp => {setTypes(typesTemp); setConfirmedTypes(typesTemp)})
     }, [])
@@ -246,20 +251,6 @@ const AddUserPanel = () => {
         }
     }
 
-    function checkServices() {
-        if(role == 'CASHIER'){
-            if(selectedTypeNames.length == 0) {
-                setServiceErrorMessage('Выберите услуги')
-                return false
-            } else {
-                setServiceErrorMessage('')
-                return true
-            }
-        }else{
-            return true
-        }
-    }
-
     const handleChangeRole = (e) => {
         setRole(e.target.value)
     }
@@ -293,17 +284,16 @@ const AddUserPanel = () => {
         checkPatronymic()
         checkEmail()
         checkPassword()
-        checkServices()
-        if (checkName() && checkSurname() && checkPatronymic() && checkEmail() && checkPassword() && checkServices()) {
+        if (checkName() && checkSurname() && checkPatronymic() && checkEmail() && checkPassword()) {
             const user = await registration((patronymic.length > 0) ? `${surname} ${name} ${patronymic}` : `${surname} ${name}`, email, password, role)
             if (user == 'Пользователь с таким адресом электронной почты уже существует') {
                 setEmailErrorMessage(user)
             } else {
                 if(user.role == 'CASHIER') {
                     const cashier = await createCashier(user.id)
-                    console.log(selectedTypeIds)
-                    await addServices(cashier.id, selectedTypeIds)
+                    selectedTypeIds.length != 0 && selectedTypeIds.forEach(selectedTypeId => {setServiceCashierId(selectedTypeId, cashier.id); ServiceStore.deleteService(selectedTypeId)})
                 }
+                console.log(user)
                 UserStore.addUser(user)
                 setName('')
                 setSurname('')
@@ -385,18 +375,18 @@ const AddUserPanel = () => {
                 </RoleFormControl>
                 {role == 'CASHIER' && <CashierButton disableRipple onClick={handleClickOpenDialog}>Выберите услуги за которые отвечает кассир</CashierButton>}
                 {role == 'CASHIER' && selectedTypeNames.length != 0 && <StyledTypography>Выбрано: {selectedTypeNames.join(', ')}.</StyledTypography>}
-                {serviceErrorMessage.length > 0 && (<FormHelperText error>
-                        {serviceErrorMessage}
-                </FormHelperText>)}
                 <RegButton disableRipple variant='contained' onClick={regButtonHandler}>Создать пользователя</RegButton>
                 <StyledDialog onClose={handleCloseDialog} open={openDialog}>
                     <StyledDialogTitle>Услуги за которые отвечает кассир:</StyledDialogTitle>
+                    {ServiceStore.services.length != 0 ?
                     <StyledFormGroup>
                         {ServiceStore.services.map(service =>
                             <FormControlLabel control={<StyledCheckbox checked={types[`${service.type}`]} onClick={typeCheckboxHandler} name={`${service.type}`}/>} label={`(${service.type})${service.description}`}/>
                         )}
-                        <StyledButton disableRipple onClick={confirmButtonHandler}>Выбрать</StyledButton>
-                    </StyledFormGroup>
+                    </StyledFormGroup> :
+                    <MessageBox>В данный момент неназначенных услуг нет</MessageBox>
+                    }
+                    <StyledButton disableRipple onClick={confirmButtonHandler}>{ServiceStore.services.length != 0 ? 'Выбрать' : 'Выйти'}</StyledButton>
                 </StyledDialog>
                 <Snackbar open={openAlert} autoHideDuration={6000} onClose={handleCloseAlert} TransitionComponent={Slide}>
                     <Alert

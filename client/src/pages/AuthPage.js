@@ -46,7 +46,8 @@ const Logo = styled(Link)({
         color: 'black',
         backgroundColor: 'white'
     },
-    textDecoration: 'none'
+    textDecoration: 'none',
+    cursor: 'pointer'
 })
 
 const AuthWindow = styled(Paper)({
@@ -140,6 +141,10 @@ const AuthPage = () => {
     const [authErrorMessage, setAuthErrorMessage] = useState('')
     const [showPassword, setShowPassword] = useState(false)
 
+    function logoButtonHandler() {
+        navigate('/')
+    }
+
     function handleClickShowPassword() {
         setShowPassword((show) => !show)
     }
@@ -196,8 +201,8 @@ const AuthPage = () => {
     return (
         <PageContainer>
             <Header>
-                <HeaderContentContainer sx={{height: '70px'}}>
-                    <Logo href='/'>БЕЛБАНК</Logo>
+                <HeaderContentContainer>
+                    <Logo onClick={logoButtonHandler}>БЕЛБАНК</Logo>
                 </HeaderContentContainer>
             </Header>
             <AuthWindow elevation={9}>
