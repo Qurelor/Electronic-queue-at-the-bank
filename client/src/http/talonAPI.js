@@ -1,7 +1,7 @@
-import {$host} from './index';
+import {$host, $authHost} from './index';
 
-export const createTalon = async (number, status, serviceId, userId) => {
-    const {data} = await $host.post('api/talon/create', {number, status, serviceId, userId})
+export const createTalon = async (number, status, serviceId) => {
+    const {data} = await $authHost.post('api/talon/create', {number, status, serviceId})
     return data
 }
 
@@ -18,12 +18,12 @@ export const getAllTalons = async (serviceIds, status) => {
 }
 
 export const setTalonBankWindowId = async (id, bankWindowId) => {
-    const {data} = await $host.post('api/talon/setBankWindowId', {id, bankWindowId})
+    const {data} = await $authHost.post('api/talon/setBankWindowId', {id, bankWindowId})
     return data
 }
 
 export const setTalonStatus = async (id, status) => {
-    const {data} = await $host.post('api/talon/setStatus', {id, status})
+    const {data} = await $authHost.post('api/talon/setStatus', {id, status})
     return data
 }
 

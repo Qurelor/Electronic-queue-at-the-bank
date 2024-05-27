@@ -19,7 +19,8 @@ import FormHelperText from '@mui/material/FormHelperText';
 import {auth} from '../http/userAPI';
 import UserStore from '../store/UserStore';
 import { styled } from '@mui/material/styles';
-import {EMAIL_REGEXP} from '../constants'
+import {EMAIL_REGEXP} from '../constants';
+import {jwtDecode} from 'jwt-decode';
 
 const PageContainer = styled(Box)({
     display: 'flex',
@@ -183,16 +184,13 @@ const AuthPage = () => {
         checkEmail()
         checkPassword()
         if (checkEmail() && checkPassword()) {
-            const user = await auth(email, password)
-            if (user == 'Неправильный адрес электронной почты или пароль') {
-                setAuthErrorMessage(user)
+            const response = await auth(email, password)
+            if (response == 'Неправильный адрес электронной почты или пароль') {
+                setAuthErrorMessage(response)
             } else {
-                UserStore.setIsAuth('true')
-                UserStore.setRole(user.role)
-                UserStore.setUserId(user.id)
-                localStorage.setItem('isAuth', 'true')
-                localStorage.setItem('role', user.role)
-                localStorage.setItem('userId', user.id)
+                localStorage.setItem('token', response.token)
+                const user = jwtDecode(response.token)
+                UserStore.setUser(user)
                 navigate('/')
             }
         }

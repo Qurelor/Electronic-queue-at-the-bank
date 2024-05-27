@@ -1,7 +1,7 @@
-import {$host} from './index';
+import {$host, $authHost} from './index';
 
 export const createBankWindow = async (number) => {
-    const {data} = await $host.post('api/bankWindow/create', {number})
+    const {data} = await $authHost.post('api/bankWindow/create', {number})
     return data
 }
 
@@ -13,7 +13,7 @@ export const getAllBankWindows = async (sortName, sortDirection, bankWindowId) =
 }
 
 export const setBankWindowCashierId = async (id, cashierId) => {
-    const {data} = await $host.post('api/bankWindow/setCashierId', {id, cashierId})
+    const {data} = await $authHost.post('api/bankWindow/setCashierId', {id, cashierId})
     return data
 }
 
@@ -38,5 +38,15 @@ export const getAllBankWindowsWithCashier = async (sortName, sortDirection) => {
 
 export const getCashierIdByBankWindowId = async (id) => {
     const {data} = await $host.get(`api/bankWindow/getCashierIdById/${id}`)
+    return data
+}
+
+export const getBankWindowByCashierId = async (cashierId) => {
+    const {data} = await $host.get(`api/bankWindow/getByCashierId/${cashierId}`)
+    return data
+}
+
+export const setBankWindowStatus = async (id, status) => {
+    const {data} = await $authHost.post('api/bankWindow/setStatus', {id, status})
     return data
 }

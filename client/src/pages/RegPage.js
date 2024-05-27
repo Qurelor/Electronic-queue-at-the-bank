@@ -19,7 +19,8 @@ import FormHelperText from '@mui/material/FormHelperText';
 import {registration} from '../http/userAPI';
 import UserStore from '../store/UserStore';
 import { styled } from '@mui/material/styles';
-import {EMAIL_REGEXP} from '../constants'
+import {EMAIL_REGEXP} from '../constants';
+import {jwtDecode} from 'jwt-decode';
 
 const PageContainer = styled(Box)({
     display: 'flex',
@@ -145,7 +146,6 @@ const RegPage = () => {
     const [password, setPassword] = useState('')
     const [passwordErrorMessage, setPasswordErrorMessage] = useState('')
     const [showPassword, setShowPassword] = useState(false)
-    const [checkError, setCheckError] = useState(false)
 
     function logoButtonHandler() {
         navigate('/')
@@ -227,16 +227,13 @@ const RegPage = () => {
         checkEmail()
         checkPassword()
         if (checkName() && checkSurname() && checkPatronymic() && checkEmail() && checkPassword()) {
-            const user = await registration((patronymic.length > 0) ? `${surname} ${name} ${patronymic}` : `${surname} ${name}`, email, password, 'USER')
-            if (user == 'Пользователь с таким адресом электронной почты уже существует') {
-                setEmailErrorMessage(user)
+            const response = await registration((patronymic.length > 0) ? `${surname} ${name} ${patronymic}` : `${surname} ${name}`, email, password, 'ADMIN')
+            if (response == 'Пользователь с таким адресом электронной почты уже существует') {
+                setEmailErrorMessage(response)
             } else {
-                UserStore.setIsAuth('true')
-                UserStore.setRole(user.role)
-                UserStore.setUserId(user.userId)
-                localStorage.setItem('isAuth', 'true')
-                localStorage.setItem('role', user.role)
-                localStorage.setItem('userId', user.id)
+                localStorage.setItem('token', response.token)
+                const user = jwtDecode(response.token)
+                UserStore.setUser(user)
                 navigate('/')
             }
         }

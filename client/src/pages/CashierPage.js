@@ -5,7 +5,7 @@ import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import BankWindowStore from '../store/BankWindowStore';
-import {getAllBankWindowsWithoutCashier, setBankWindowCashierId, getBankWindowNumberById} from '../http/bankWindowAPI';
+import {getAllBankWindowsWithoutCashier, setBankWindowCashierId, getBankWindowNumberById, getBankWindowByCashierId, setBankWindowStatus} from '../http/bankWindowAPI';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import Link from '@mui/material/Link';
@@ -17,9 +17,27 @@ import MenuItem from '@mui/material/MenuItem';
 import {useNavigate} from 'react-router-dom';
 import { styled } from '@mui/material/styles';
 import TalonStore from '../store/TalonStore';
-import {getAllTalons, setTalonBankWindowId, setTalonStatus} from '../http/talonAPI';
+import {getAllTalons, setTalonBankWindowId, setTalonStatus, getServicedTalonByBankWindowId} from '../http/talonAPI';
 import {getCashierIdByUserId} from '../http/cashierAPI';
 import {getTypesByServiceIds, getServiceIdsByCashierId} from '../http/serviceAPI';
+import CashierStore from '../store/CashierStore';
+import CircularProgress from '@mui/material/CircularProgress';
+import Snackbar from '@mui/material/Snackbar';
+import Slide from '@mui/material/Slide';
+import Alert from '@mui/material/Alert';
+import {useRef} from 'react';
+
+const LoadingContainer = styled(Box)({
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '100vh',
+    width: '100vw',
+})
+
+const LoadingIcon = styled(CircularProgress)({
+    color: 'limegreen'
+})
 
 const PageContainer = styled(Box)({
     display: 'flex',
@@ -306,33 +324,57 @@ const CashierPage = observer(() => {
     const navigate = useNavigate()
     const [anchorEl, setAnchorEl] = useState(null);
     const [showTalonSelectionWindow, setShowTalonSelectionWindow] = useState(false);
+    const [isLoading, setIsLoading] = useState(true)
+    const [openAlert, setOpenAlert] = useState(false)
+    const intervalRef = useRef(null)
 
     useEffect(() => {
-        if(UserStore.role == 'CASHIER'){
-            UserStore.setIsWorking(localStorage.getItem('isWorking') || 'false')
-            UserStore.setWorkingWindowId(localStorage.getItem('workingWindowId') || '')
-            UserStore.setWorkingWindowNumber(localStorage.getItem('workingWindowNumber') || '')
-            BankWindowStore.setSelectedTalonId(localStorage.getItem('selectedTalonId') || '')
-            BankWindowStore.setSelectedTalon(localStorage.getItem('selectedTalon') || '')
-            BankWindowStore.setStatus(localStorage.getItem('status') || '')
+        async function getData() {
+            const cashierId = await getCashierIdByUserId(UserStore.user.id)
+            const bankWindow = await getBankWindowByCashierId(cashierId)
+            if (bankWindow) {
+                CashierStore.setBankWindow(bankWindow)
+                const servicedTalon = await getServicedTalonByBankWindowId(bankWindow.id)
+                if (servicedTalon) {
+                    const type = await getTypesByServiceIds(servicedTalon.serviceId)
+                    servicedTalon.type = type
+                    console.log(servicedTalon)
+                    CashierStore.setServicedTalon(servicedTalon)
+                }
+            }
+            const bankWindowsWithoutCashier = await getAllBankWindowsWithoutCashier('number', 'asc')
+            BankWindowStore.setBankWindows(bankWindowsWithoutCashier)
+            getTalonsWithTypes()
+            intervalRef.current = setInterval(getTalonsWithTypes, 5000)
+            setIsLoading(false)
         }
-        getAllBankWindowsWithoutCashier('number', 'asc').then(data => BankWindowStore.setBankWindows(data))
-        let interval = setInterval(getTalonsWithTypes, 5000)
+        getData()
         return () => {
-            clearInterval(interval)
+            clearInterval(intervalRef.current)
         }
     }, [])
 
     async function getTalonsWithTypes() {
-        getCashierIdByUserId(UserStore.userId)
+        getCashierIdByUserId(UserStore.user.id)
         .then(cashierId => getServiceIdsByCashierId(cashierId)
-        .then(serviceIds => getAllTalons(serviceIds, 'ожидание')
-        .then(async talons => {
-            let talonsWithTypes = await Promise.all(talons.map(async talon => {
-                const types = await getTypesByServiceIds(talon.serviceId); talon.type = types[0]; return talon
-            })); 
-            TalonStore.setTalons(talonsWithTypes)
-        })))
+        .then(serviceIds => {
+            if(serviceIds.length != 0) {
+                getAllTalons(serviceIds, 'ожидание')
+                .then(async talons => {
+                    console.log(talons)
+                    let talonsWithTypes = await Promise.all(talons.map(async talon => {
+                        const type = await getTypesByServiceIds(talon.serviceId); talon.type = type; return talon
+                    }));
+                    TalonStore.setTalons(talonsWithTypes)
+                })
+            }
+        }))
+    }
+
+    async function getTalonWithType(talon) {
+        const type = await getTypesByServiceIds(talon.serviceId)
+        talon.type = type
+        return talon
     }
 
     function logoButtonHandler() {
@@ -347,98 +389,87 @@ const CashierPage = observer(() => {
         setAnchorEl(null);
     }
 
-    function exitButtonHandler() {
-        UserStore.isWorking == 'true' && setBankWindowCashierId(UserStore.workingWindowId, null)
-        UserStore.setIsAuth('false')
-        UserStore.setRole('null')
-        UserStore.setUserId('null')
-        localStorage.setItem('isAuth', 'false')
-        localStorage.setItem('role', 'null')
-        localStorage.setItem('userId', 'null')
-        localStorage.setItem('isWorking', 'false')
-        localStorage.setItem('workingWindow', 'null')
-        BankWindowStore.selectedTalonId.length != 0 && setTalonStatus(BankWindowStore.selectedTalonId, 'обслужен')
-        localStorage.setItem('selectedTalonId', '')
-        localStorage.setItem('selectedTalon', '')
-        BankWindowStore.setSelectedTalonId('')
-        BankWindowStore.setSelectedTalon('')
+    async function exitButtonHandler() {
+        clearInterval(intervalRef.current)
+        UserStore.setUser(null)
+        localStorage.removeItem('token')
         navigate('/')
     }
 
-    function quitButtonHandler() {
-        BankWindowStore.selectedTalonId.length != 0 && setTalonStatus(BankWindowStore.selectedTalonId, 'обслужен')
-        localStorage.setItem('selectedTalonId', '')
-        localStorage.setItem('selectedTalon', '')
-        BankWindowStore.setSelectedTalonId('')
-        BankWindowStore.setSelectedTalon('')
-        setBankWindowCashierId(UserStore.workingWindowId, null)
-        localStorage.setItem('isWorking', 'false')
-        localStorage.setItem('workingWindowId', '')
-        localStorage.setItem('workingWindowNumber', '')
-        UserStore.setIsWorking('false')
-        UserStore.setWorkingWindowId('')
-        UserStore.setWorkingWindowNumber('')
+    async function quitButtonHandler() {
+        if(CashierStore.servicedTalon) {
+            setOpenAlert(true)
+        } else {
+            if(CashierStore.bankWindow) {
+                await setBankWindowStatus(CashierStore.bankWindow.id, 'не занято')
+                await setBankWindowCashierId(CashierStore.bankWindow.id, null)
+                CashierStore.setBankWindow(null)
+            }
+            const bankWindowsWithoutCashier = await getAllBankWindowsWithoutCashier('number', 'asc')
+            BankWindowStore.setBankWindows(bankWindowsWithoutCashier)
+        }
     }
 
     function talonSelectionButtonHandler() {
         getTalonsWithTypes()
         .then(setShowTalonSelectionWindow(true))
-        .then(console.log(TalonStore.talons))
     }
 
-    function skipTalonButtonHandler() {
-        setTalonStatus(BankWindowStore.selectedTalonId, 'не явился')
-        .then(BankWindowStore.setSelectedTalonId(''))
-        .then(BankWindowStore.setSelectedTalon(''))
-        .then(localStorage.setItem('selectedTalonId', ''))
-        .then(localStorage.setItem('selectedTalon', ''))
-        .then(BankWindowStore.setStatus('выбор талона'))
-        .then(localStorage.setItem('status', 'выбор талона'))
+    async function skipTalonButtonHandler() {
+        await setTalonStatus(CashierStore.servicedTalon.id, 'не явился')
+        const bankWindow = await setBankWindowStatus(CashierStore.bankWindow.id, 'выбор талона')
+        CashierStore.setServicedTalon(null)
+        CashierStore.setBankWindow(bankWindow)
     }
 
-    function startServiceButtonHandler() {
-        setTalonStatus(BankWindowStore.selectedTalonId, 'обслуживается')
-        .then(BankWindowStore.setStatus('обслуживание талона'))
-        .then(localStorage.setItem('status', 'обслуживание талона'))
+    async function startServiceButtonHandler() {
+        const talon = await setTalonStatus(CashierStore.servicedTalon.id, 'обслуживается')
+        const type = await getTypesByServiceIds(talon.serviceId)
+        talon.type = type
+        CashierStore.setServicedTalon(talon)
+        const bankWindow = await setBankWindowStatus(CashierStore.bankWindow.id, 'обслуживание талона')
+        CashierStore.setBankWindow(bankWindow)
     }
 
-    function finishServiceButtonHandler() {
-        setTalonStatus(BankWindowStore.selectedTalonId, 'обслужен')
-        .then(BankWindowStore.setSelectedTalonId(''))
-        .then(BankWindowStore.setSelectedTalon(''))
-        .then(localStorage.setItem('selectedTalonId', ''))
-        .then(localStorage.setItem('selectedTalon', ''))
-        .then(BankWindowStore.setStatus('выбор талона'))
-        .then(localStorage.setItem('status', 'выбор талона'))
+    async function finishServiceButtonHandler() {
+        await setTalonStatus(CashierStore.servicedTalon.id, 'обслужен')
+        const bankWindow = await setBankWindowStatus(CashierStore.bankWindow.id, 'выбор талона')
+        CashierStore.setServicedTalon(null)
+        CashierStore.setBankWindow(bankWindow)
     }
 
     async function bankWindowButtonHandler(e) {
-        localStorage.setItem('isWorking', 'true')
-        localStorage.setItem('workingWindowId', e.target.id)
-        const bankWindowNumber = await getBankWindowNumberById(e.target.id)
-        localStorage.setItem('workingWindowNumber', bankWindowNumber)
-        localStorage.setItem('status', 'выбор талона')
-        UserStore.setIsWorking('true')
-        UserStore.setWorkingWindowId(e.target.id)
-        UserStore.setWorkingWindowNumber(bankWindowNumber)
-        BankWindowStore.setStatus('выбор талона')
-        getCashierIdByUserId(UserStore.userId).then(cashierId => setBankWindowCashierId(e.target.id, cashierId))
+        const cashierId = await getCashierIdByUserId(UserStore.user.id)
+        await setBankWindowCashierId(e.target.id, cashierId)
+        const bankWindow = await setBankWindowStatus(e.target.id, 'выбор талона')
+        CashierStore.setBankWindow(bankWindow)
     }
 
-    function selectTalonButtonHandler(id, bankWindowId, type, number) {
-        setTalonBankWindowId(id, bankWindowId)
-        .then(setTalonStatus(id, 'готов к обслуживанию'))
-        .then(BankWindowStore.setSelectedTalonId(id))
-        .then(BankWindowStore.setSelectedTalon(`${type}-${number}`))
-        .then(localStorage.setItem('selectedTalonId', id))
-        .then(localStorage.setItem('selectedTalon', `${type}-${number}`))
-        .then(BankWindowStore.setStatus('ожидание талона'))
-        .then(localStorage.setItem('status', 'ожидание талона'))
-        .then(setShowTalonSelectionWindow(false))
+    async function selectTalonButtonHandler(id) {
+        await setTalonBankWindowId(id, CashierStore.bankWindow.id)
+        const talon = await setTalonStatus(id, 'готов к обслуживанию')
+        const type = await getTypesByServiceIds(talon.serviceId)
+        talon.type = type
+        CashierStore.setServicedTalon(talon)
+        const bankWindow = await setBankWindowStatus(CashierStore.bankWindow.id, 'ожидание талона')
+        CashierStore.setBankWindow(bankWindow)
+        setShowTalonSelectionWindow(false)
     }
 
     function exitToWorkingWindowButtonHandler() {
         setShowTalonSelectionWindow(false)
+    }
+
+    function handleCloseAlert() {
+        setOpenAlert(false)
+    }
+
+    if (isLoading) {
+        return (
+            <LoadingContainer>
+                <LoadingIcon/>
+            </LoadingContainer>
+        )
     }
 
     return (
@@ -471,7 +502,7 @@ const CashierPage = observer(() => {
                     </HeaderButtonsContainer>
                 </HeaderContentContainer>
             </Header>
-            {UserStore.isWorking == 'true' ?
+            {CashierStore.bankWindow ?
             <WorkplaceContainer>
                 {showTalonSelectionWindow ? 
                 <SelectTalonWindowContainer elevation={9}>
@@ -480,7 +511,7 @@ const CashierPage = observer(() => {
                         <SelectTalonTitle>Выберите талон</SelectTalonTitle>
                         {TalonStore.talons.length != 0 ?
                         TalonStore.talons.map(talon =>
-                            <TalonButton disableRipple variant='outlined' onClick={() => selectTalonButtonHandler(talon.id, UserStore.workingWindowId, talon.type, talon.number)}>
+                            <TalonButton disableRipple variant='outlined' onClick={() => selectTalonButtonHandler(talon.id)}>
                                 {`${talon.type}-${talon.number}`}
                             </TalonButton>
                         ) :
@@ -492,28 +523,28 @@ const CashierPage = observer(() => {
                     <WorkingWindowGrid>
                         <Box/>
                         <Box/>
-                        <WorkingWindowTitle >Рабочее окно №{UserStore.workingWindowNumber}</WorkingWindowTitle>
+                        <WorkingWindowTitle >Рабочее окно №{CashierStore.bankWindow.number}</WorkingWindowTitle>
                         <Box/>
                         <ShutdownButton disableRipple variant='outlined' onClick={quitButtonHandler}>Завершить работу</ShutdownButton>
                     </WorkingWindowGrid>
-                    {BankWindowStore.status == 'выбор талона' &&
+                    {CashierStore.bankWindow.status == 'выбор талона' &&
                     <React.Fragment>
                         <Status>В данный момент вы не обслуживаете талон</Status>
                         <SelectTalonButton disableRipple variant='outlined' onClick={talonSelectionButtonHandler}>Выбрать талон</SelectTalonButton>
                     </React.Fragment>
                     }
-                    {BankWindowStore.status == 'ожидание талона' &&
+                    {CashierStore.bankWindow.status == 'ожидание талона' &&
                     <React.Fragment>
-                        <Status>В данный момент вы ожидаете талон {BankWindowStore.selectedTalon}</Status>
+                        <Status>В данный момент вы ожидаете талон {CashierStore.servicedTalon.type}-{CashierStore.servicedTalon.number}</Status>
                         <WaitingWindowButtonsContainer>
                             <SkipTalonButton disableRipple variant='outlined' onClick={skipTalonButtonHandler}>Не явился</SkipTalonButton>
                             <StartServiceButton disableRipple variant='outlined' onClick={startServiceButtonHandler}>Начать обслуживание</StartServiceButton>
                         </WaitingWindowButtonsContainer>
                     </React.Fragment>
                     }
-                    {BankWindowStore.status == 'обслуживание талона' &&
+                    {CashierStore.bankWindow.status == 'обслуживание талона' &&
                     <React.Fragment>
-                        <Status>В данный момент вы обслуживаете талон {BankWindowStore.selectedTalon}</Status>
+                        <Status>В данный момент вы обслуживаете талон {CashierStore.servicedTalon.type}-{CashierStore.servicedTalon.number}</Status>
                         <FinishServiceButton disableRipple variant='outlined' onClick={finishServiceButtonHandler}>Завершить обслуживание</FinishServiceButton>
                     </React.Fragment>
                     }
@@ -539,6 +570,14 @@ const CashierPage = observer(() => {
                 </SelectWindowGrid> :
                 <SelectWindowMessageBackground elevation={9}>В данный момент нет ни одного свободного окна. Обратитесь к администратору.</SelectWindowMessageBackground>}
             </SelectWindowContainer>}
+            <Snackbar open={openAlert} autoHideDuration={6000} onClose={handleCloseAlert} TransitionComponent={Slide}>
+                <Alert
+                    severity='error'
+                    variant='filled'
+                >
+                    Вы не можете выйти пока обслуживаете талон!
+                </Alert>
+            </Snackbar>
         </PageContainer>
     );
 });

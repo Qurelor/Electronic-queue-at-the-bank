@@ -1,7 +1,7 @@
-import {$host} from './index';
+import {$host, $authHost} from './index';
 
 export const addService = async (type, description) => {
-    const {data} = await $host.post('api/service/add', {type, description})
+    const {data} = await $authHost.post('api/service/add', {type, description})
     return data
 }
 
@@ -18,7 +18,7 @@ export const getTypesByServiceIds = async (ids) => {
 }
 
 export const setServiceCashierId = async (id, cashierId) => {
-    const {data} = await $host.post('api/service/setCashierId', {id, cashierId})
+    const {data} = await $authHost.post('api/service/setCashierId', {id, cashierId})
     return data
 }
 
@@ -29,5 +29,10 @@ export const getAllServicesWithoutCashier = async () => {
 
 export const getServiceIdsByCashierId = async (cashierId) => {
     const {data} = await $host.get(`api/service/getIdsByCashierId/${cashierId}`)
+    return data
+}
+
+export const getAllServicesByCashierId = async (cashierId) => {
+    const {data} = await $host.get(`api/service/getAllByCashierId/${cashierId}`)
     return data
 }

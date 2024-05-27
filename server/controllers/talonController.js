@@ -3,8 +3,9 @@ const { Op } = require("sequelize");
 
 class TalonController {
     async create(req, res) {
-        const {number, status, serviceId, userId} = req.body
-        const talon = await Talon.create({number, status, serviceId, userId})
+        const {number, status, serviceId} = req.body
+        const user = req.user
+        const talon = await Talon.create({number, status, serviceId, userId: user.id})
         return res.json(talon)
     }
 
@@ -39,7 +40,8 @@ class TalonController {
 
     async setStatus(req, res) {
         const {id, status} = req.body
-        const talon = await Talon.update({status}, {where: {id}})
+        await Talon.update({status}, {where: {id}})
+        const talon = await Talon.findOne({where: {id}})
         return res.json(talon)
     }
 

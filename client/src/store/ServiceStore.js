@@ -2,6 +2,7 @@ import {makeAutoObservable} from 'mobx';
 
 class ServiceStore {
     services = []
+    
     constructor() {
         makeAutoObservable(this)
     }

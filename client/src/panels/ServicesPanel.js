@@ -1,16 +1,34 @@
 import Paper from '@mui/material/Paper';
-import {getAllServices} from '../http/serviceAPI';
-import {useEffect, useState} from 'react';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import TableSortLabel from '@mui/material/TableSortLabel';
+import {getAllServices, setServiceCashierId} from '../http/serviceAPI';
+import {useEffect, useState, useRef} from 'react';
 import ServiceStore from '../store/ServiceStore';
 import {observer} from 'mobx-react-lite';
 import { styled } from '@mui/material/styles';
+import TextField from '@mui/material/TextField';
+import {AgGridReact} from "ag-grid-react";
+import 'ag-grid-community/styles/ag-grid.css';
+import 'ag-grid-community/styles/ag-theme-quartz.css';
+import {toJS} from 'mobx';
+import {getUserIdByCashierId, getAllCashiers} from '../http/cashierAPI';
+import {getFullNameByUserId} from '../http/userAPI';
+import CashierStore from '../store/CashierStore';
+import Button from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import RadioGroup from '@mui/material/RadioGroup';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Radio from '@mui/material/Radio';
+
+const TableButton = styled(Button)({
+    backgroundColor: 'limegreen',
+    color: 'black',
+    flex: 1,
+    ':hover': {
+        backgroundColor: 'black',
+        color: 'white'
+    },
+    textTransform: 'none'
+})
 
 const PanelBackground = styled(Paper)({
     paddingLeft: '40px',
@@ -20,145 +38,187 @@ const PanelBackground = styled(Paper)({
     marginRight: '20px'
 })
 
-const PanelTableContainer = styled(TableContainer)({
-    borderTop: '1px solid black',
-    borderLeft: '1px solid black',
-    borderRight: '1px solid black'
-})
-
-const PanelTable = styled(Table)({
-    minWidth: '650px'
-})
-
-const FirstTableRow = styled(TableRow)({
-    backgroundColor: 'rgba(128, 128, 128, 0.3)'
-})
-
-const StyledTableCell = styled(TableCell)({
-    borderRight: '1px solid black',
-    borderBottom: '1px solid black',
+const TableContainer = styled('div')({
+    '--ag-active-color': 'limegreen',
+    width: '60vw',
     fontSize: '15px',
-    color: 'black'
+    '--ag-wrapper-border-radius': '4px'
 })
 
-const LastStyledTableCell = styled(TableCell)({
-    borderBottom: '1px solid black',
-    fontSize: '15px',
-    color: 'black'
+const Search = styled(TextField)({
+    '& .MuiOutlinedInput-root': {
+        fontSze: '15px'
+    },
+    '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
+        borderColor: 'limegreen'
+    },
+    '& .MuiInputLabel-root.Mui-focused': {
+        color: 'limegreen'
+    },
+    '& .MuiInputLabel-root': {
+        fontSize: '15px'
+    },
+    marginBottom: '20px'
 })
 
-const StyledTableSortLabel = styled(TableSortLabel)({
-    '&.Mui-active .MuiTableSortLabel-icon': {
-        color: 'black'
-    },
-    ':hover': {
-        color: 'black'
-    },
-    ':focus': {
-        color: 'black'
+const StyledDialog = styled(Dialog)({
+    '& .MuiDialog-paper': {
+        margin: '0px',
+        maxWidth: '100%',
+        paddingLeft: '20px',
+        paddingRight: '20px',
+        paddingBottom: '20px'
     }
+})
+
+const StyledDialogTitle = styled(DialogTitle)({
+    '& .MuiDialogTitle-root': {
+        fontSize: '25px'
+    },
+})
+
+const StyledRadioGroup = styled(RadioGroup)({
+    '& .MuiRadio-root.Mui-checked': {
+        color: 'limegreen'
+    }
+})
+
+const SaveButton = styled(Button)({
+    backgroundColor: 'limegreen',
+    color: 'black',
+    ':hover': {
+        backgroundColor: 'black',
+        color: 'white'
+    },
+    textTransform: 'none'
 })
 
 const ServicesPanel = observer(() => {
-    const [sortIdActive, setSortIdActive] = useState(false)
-    const [sortIdDirection, setSortIdDirection] = useState('asc')
-    const [sortTypeActive, setSortTypeActive] = useState(false)
-    const [sortTypeDirection, setSortTypeDirection] = useState('asc')
-    const [sortDescriptionActive, setSortDescriptionActive] = useState(false)
-    const [sortDescriptionDirection, setSortDescriptionDirection] = useState('asc')
+    const gridRef = useRef();
+    const [columnTitles, setColumnTitles] = useState([
+        {field: 'id', headerName: 'ID'},
+        {field: 'type', headerName: 'Тип'},
+        {field: 'description', headerName: 'Описание'},
+        {field: 'cashierFullName', headerName: 'Кассир'},
+        {field: 'button', cellRenderer: TableButtonFunction, headerName: 'Выбор кассира', cellStyle: () => ({
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            border: 'none'
+        })}
+    ])
+
+    function TableButtonFunction(props) {
+        const [openDialog, setOpenDialog] = useState(false)
+        const [value, setValue] = useState(props.data.cashierId)
+
+        const handleOpenDialog = () => {
+            setOpenDialog(true)
+            setValue(props.data.cashierId)
+        }
+
+        const handleChange = (event) => {
+            setValue(event.target.value)
+        }
+
+        async function buttonHandler() {
+            await setServiceCashierId(props.data.id, value)
+            const cashierUserId = await getUserIdByCashierId(value)
+            const cashierFullName = await getFullNameByUserId(cashierUserId)
+            let services = toJS(ServiceStore.services)
+            let actualServices = services.map(service => {
+                if (service.id == props.data.id) {
+                    service.cashierId = value
+                    service.cashierFullName = cashierFullName
+                    return service
+                } else {
+                    return service
+                }
+            })
+            ServiceStore.setServices(actualServices)
+        }
+
+        return (
+            <>
+                <TableButton disableRipple onClick={handleOpenDialog}>Выбрать</TableButton>
+                <StyledDialog open={openDialog} onClose={() => setOpenDialog(false)}>
+                    <StyledDialogTitle>Выберите кассира:</StyledDialogTitle>
+                    <StyledRadioGroup
+                        value={value}
+                        onChange={handleChange}
+                    >
+                        {CashierStore.cashiers.map(cashier => 
+                            <FormControlLabel value={cashier.id} control={<Radio disableRipple/>} label={cashier.fullName} />
+                        )}
+                    </StyledRadioGroup>
+                    <SaveButton disableRipple onClick={buttonHandler}>Сохранить</SaveButton>
+                </StyledDialog>
+            </>
+        )
+    }
 
     useEffect(() => {
-        getAllServices('id', 'asc').then(data => ServiceStore.setServices(data))
+        getAllServices('id', 'asc')
+        .then(async data => {
+            let servicesWithCashierFullName = await Promise.all(data.map(async service => {
+                if(service.cashierId){
+                    const cashierUserId = await getUserIdByCashierId(service.cashierId)
+                    const cashierFullName = await getFullNameByUserId(cashierUserId)
+                    service.cashierFullName = cashierFullName
+                }
+                return service
+            }))
+            console.log(servicesWithCashierFullName)
+            ServiceStore.setServices(servicesWithCashierFullName)
+        })
+
+        getAllCashiers()
+        .then(async data => {
+            let cashiersWithFullName = await Promise.all(data.map(async cashier => {
+                const cashierFullName = await getFullNameByUserId(cashier.userId)
+                cashier.fullName = cashierFullName
+                return cashier
+            }))
+            console.log(cashiersWithFullName)
+            CashierStore.setCashiers(cashiersWithFullName)
+        })
     }, [])
 
-    async function sortIdButtonHandler() {
-        setSortTypeActive(false)
-        setSortTypeDirection('asc')
-        setSortDescriptionActive(false)
-        setSortDescriptionDirection('asc')
-        if (sortIdDirection == 'asc' && sortIdActive == false) {
-            setSortIdActive(true)
-            await getAllServices('id', 'asc').then(data => ServiceStore.setServices(data))
-        }
-        if (sortIdDirection == 'asc' && sortIdActive == true) {
-            setSortIdDirection('desc')
-            await getAllServices('id', 'desc').then(data => ServiceStore.setServices(data))
-        }
-        if (sortIdDirection == 'desc') {
-            setSortIdDirection('asc')
-            setSortIdActive(false)
-            await getAllServices('id', 'asc').then(data => ServiceStore.setServices(data))
-        }
+    function searchOnInput() {
+        gridRef.current.api.setGridOption(
+          'quickFilterText',
+          document.getElementById('search').value,
+        );
     }
 
-    async function sortTypeButtonHandler() {
-        setSortIdActive(false)
-        setSortIdDirection('asc')
-        setSortDescriptionActive(false)
-        setSortDescriptionDirection('asc')
-        if (sortTypeDirection == 'asc' && sortTypeActive == false) {
-            setSortTypeActive(true)
-            await getAllServices('type', 'asc').then(data => ServiceStore.setServices(data))
-        }
-        if (sortTypeDirection == 'asc' && sortTypeActive == true) {
-            setSortTypeDirection('desc')
-            await getAllServices('type', 'desc').then(data => ServiceStore.setServices(data))
-        }
-        if (sortTypeDirection == 'desc') {
-            setSortTypeDirection('asc')
-            setSortTypeActive(false)
-            await getAllServices('id', 'asc').then(data => ServiceStore.setServices(data))
-        }
-    }
-
-    async function sortDescriptionButtonHandler() {
-        setSortIdActive(false)
-        setSortIdDirection('asc')
-        setSortTypeActive(false)
-        setSortTypeDirection('asc')
-        if (sortDescriptionDirection == 'asc' && sortDescriptionActive == false) {
-            setSortDescriptionActive(true)
-            await getAllServices('description', 'asc').then(data => ServiceStore.setServices(data))
-        }
-        if (sortDescriptionDirection == 'asc' && sortDescriptionActive == true) {
-            setSortDescriptionDirection('desc')
-            await getAllServices('description', 'desc').then(data => ServiceStore.setServices(data))
-        }
-        if (sortDescriptionDirection == 'desc') {
-            setSortDescriptionDirection('asc')
-            setSortDescriptionActive(false)
-            await getAllServices('id', 'asc').then(data => ServiceStore.setServices(data))
-        }
+    const defaultColDef = {
+        flex: 0,
+    };
+    
+    const autoSizeStrategy = {
+        type: 'fitGridWidth'
     }
 
     return (
         <PanelBackground elevation={9}>
-            <PanelTableContainer elevation={9}>
-                <PanelTable>
-                    <TableHead>
-                        <FirstTableRow>
-                            <StyledTableCell>
-                                <StyledTableSortLabel active={sortIdActive} direction={sortIdDirection} onClick={sortIdButtonHandler}>ID</StyledTableSortLabel>
-                            </StyledTableCell>
-                            <StyledTableCell>
-                                <StyledTableSortLabel active={sortTypeActive} direction={sortTypeDirection} onClick={sortTypeButtonHandler}>Тип</StyledTableSortLabel>
-                            </StyledTableCell>
-                            <LastStyledTableCell>
-                                <StyledTableSortLabel active={sortDescriptionActive} direction={sortDescriptionDirection} onClick={sortDescriptionButtonHandler}>Описание</StyledTableSortLabel>
-                            </LastStyledTableCell>
-                        </FirstTableRow>
-                    </TableHead>
-                    <TableBody>
-                        {ServiceStore.services.map(service => (
-                        <TableRow>
-                            <StyledTableCell>{service.id}</StyledTableCell>
-                            <StyledTableCell>{service.type}</StyledTableCell>
-                            <LastStyledTableCell>{service.description}</LastStyledTableCell>
-                        </TableRow>
-                        ))}
-                    </TableBody>
-                </PanelTable>
-            </PanelTableContainer>
+            <Search
+                id="search"
+                label='Поиск'
+                variant='outlined'    
+                onInput={searchOnInput}
+            />
+            <TableContainer
+                className='ag-theme-quartz'
+            >
+                <AgGridReact
+                    ref={gridRef}
+                    rowData={toJS(ServiceStore.services)}
+                    columnDefs={columnTitles}
+                    defaultColDef={defaultColDef}
+                    domLayout='autoHeight'
+                    autoSizeStrategy={autoSizeStrategy}
+                />
+            </TableContainer>
         </PanelBackground>
     );
 });

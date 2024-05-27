@@ -17,11 +17,24 @@ import Typography from '@mui/material/Typography';
 import TrendingFlatRoundedIcon from '@mui/icons-material/TrendingFlatRounded';
 import {getTypesByServiceIds, getServiceIdsByCashierId} from '../http/serviceAPI';
 import {getAllTalons, getServicedTalonByBankWindowId, setTalonStatus, getLastTalonByUserId} from '../http/talonAPI';
-import TalonStore from '../store/TalonStore';
-import {getAllBankWindowsWithCashier, getCashierIdByBankWindowId, setBankWindowCashierId} from '../http/bankWindowAPI';
+import {getAllBankWindowsWithCashier, getCashierIdByBankWindowId, setBankWindowCashierId, getByCashierId} from '../http/bankWindowAPI';
 import BankWindowStore from '../store/BankWindowStore';
+import CashierStore from '../store/CashierStore';
+import CircularProgress from '@mui/material/CircularProgress';
 
-const PageContainer = styled(Box)(({theme}) => ({
+const LoadingContainer = styled(Box)({
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '100vh',
+    width: '100vw',
+})
+
+const LoadingIcon = styled(CircularProgress)({
+    color: 'limegreen'
+})
+
+const PageContainer = styled(Box)({
     display: 'flex',
     backgroundColor: 'limegreen',
     flexDirection: 'column',
@@ -29,7 +42,7 @@ const PageContainer = styled(Box)(({theme}) => ({
     justifyContent: 'flex-start',
     minHeight: '100vh',
     paddingBottom: '40px'
-}))
+})
 
 const Header = styled(AppBar)({
     backgroundColor: 'white',
@@ -129,13 +142,6 @@ const BoardAndUserTalonsContainer = styled(Box)({
 const Board = styled(Paper)({
     display: 'flex',
     flexDirection: 'column',
-    /*display: 'grid',
-    gridTemplateColumns: '1fr 1fr 1fr',
-    justifyItems: 'center',
-    alignItems: 'center',
-    minHeight: '200px',
-    minWidth: '300px',
-    padding: '20px'*/
     minHeight: '30vh',
     minWidth: '30vw',
     borderRadius: '0px'
@@ -146,9 +152,8 @@ const BoardTitleContainer = styled(Box)({
     gridTemplateColumns: '1fr 1fr 1fr',
     justifyItems: 'center',
     alignItems: 'center',
-    paddingTop: '20px',
-    paddingBottom: '20px',
-    borderBottom: '1px solid black'
+    borderBottom: '1px solid black',
+    gridTemplateRows: '50px'
 })
 
 const BoardItem = styled(Box)({
@@ -169,11 +174,14 @@ const BoardIcon = styled(TrendingFlatRoundedIcon)({
     color: 'limegreen'
 })
 
-const BoardMessage = styled(Box)({
+const BoardMessageContainer = styled(Box)({
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
     flex: '1',
+})
+
+const BoardMessage = styled(Typography)({
     fontSize: '25px'
 })
 
@@ -189,7 +197,9 @@ const UserTalonWindowContainer = styled(Paper)({
 const UserTalonWindowTitleContainer = styled(Box)({
     display: 'flex',
     justifyContent: 'center',
-    borderBottom: '1px solid black'
+    alignItems: 'center',
+    borderBottom: '1px solid black',
+    height: '50px'
 })
 
 const UserTalonWindowTitle = styled(Typography)({
@@ -249,6 +259,17 @@ const CancelButton = styled(Button)({
         backgroundColor: 'white'
     },
     marginBottom: '10px'
+})
+
+const UserTalonMessageContainer = styled(Box)({
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    flex: 1
+})
+
+const UserTalonMessage = styled(Typography)({
+    fontSize: '25px'
 })
 
 const QueueStatusTitle = styled(Typography)({
@@ -317,56 +338,75 @@ const HomePage = observer(() => {
 
     const navigate = useNavigate()
     const [anchorEl, setAnchorEl] = useState(null);
+    const [isLoading, setIsLoading] = useState(true)
 
     useEffect(() => {
-        let lastTalonInterval
-        if (UserStore.role == 'USER') {
-            lastTalonInterval = setInterval(getLastTalonWithType, 5000)
+        let interval
+        async function getDataByRole() {
+            if (UserStore.user && UserStore.user.role == 'USER') {
+                const lastTalon = await getLastTalonWithType()
+                const bankWindows = await getBankWindows()
+                UserStore.setLastTalon(lastTalon)
+                BankWindowStore.setBankWindows(bankWindows)
+            } else {
+                const bankWindows = await getBankWindows()
+                BankWindowStore.setBankWindows(bankWindows)
+            }
         }
-        UserStore.setIsWorking(localStorage.getItem('isWorking') || 'false')
-        UserStore.setWorkingWindowId(localStorage.getItem('workingWindowId') || '')
-        UserStore.setWorkingWindowNumber(localStorage.getItem('workingWindowNumber') || '')
-        BankWindowStore.setSelectedTalonId(localStorage.getItem('selectedTalonId') || '')
-        BankWindowStore.setSelectedTalon(localStorage.getItem('selectedTalon') || '')
-        BankWindowStore.setStatus(localStorage.getItem('status') || '')
-        getBankWindowsWithTalon()
-        let bankWindowsInterval = setInterval(getBankWindowsWithTalon, 5000)
+        async function getData() {
+            await getDataByRole()
+            setIsLoading(false)
+            interval = setInterval(getDataByRole, 5000)
+        }
+        getData()
+
         return () => {
-            clearInterval(bankWindowsInterval)
-            lastTalonInterval && clearInterval(lastTalonInterval)
+            clearInterval(interval)
         }
     }, [])
 
-    async function getBankWindowsWithTalon() {
-        getAllBankWindowsWithCashier('id', 'asc')
-        .then(async bankWindows => {
-            let bankWindowsWithTalon = await Promise.all(bankWindows.map(async bankWindow => {
-                let servicedTalon = await getServicedTalonByBankWindowId(bankWindow.id)
-                if(servicedTalon != null) { 
-                    const types = await getTypesByServiceIds(servicedTalon.serviceId); 
-                    servicedTalon.type = types[0];
-                }
-                bankWindow.servicedTalon = servicedTalon
-                let cashierId = await getCashierIdByBankWindowId(bankWindow.id)
-                let serviceIds = await getServiceIdsByCashierId(cashierId)
-                let talons = await getAllTalons(serviceIds, 'ожидание')
-                let talonsWithTypes = await Promise.all(talons.map(async talon => {
-                    const types = await getTypesByServiceIds(talon.serviceId); talon.type = types[0]; return talon
+    async function getLastTalonWithType() {
+        const lastTalon = await getLastTalonByUserId(UserStore.user.id)
+        if (lastTalon) {
+            const type = await getTypesByServiceIds(lastTalon.serviceId)
+            lastTalon.type = type
+            return lastTalon
+        } else {
+            return lastTalon
+        }
+    }
+
+    async function getBankWindows() {
+        const bankWindows = await getAllBankWindowsWithCashier('number', 'asc')
+        if (bankWindows) {
+            return await getBankWindowsWithTalons(bankWindows)
+        } else {
+            return bankWindows
+        }
+    }
+
+    async function getBankWindowsWithTalons(bankWindows) {
+        const bankWindowsWithTalons = await Promise.all(bankWindows.map(async bankWindow => {
+            const servicedTalon = await getServicedTalonByBankWindowId(bankWindow.id)
+            if(servicedTalon != null) { 
+                const type = await getTypesByServiceIds(servicedTalon.serviceId); 
+                servicedTalon.type = type;
+            }
+            bankWindow.servicedTalon = servicedTalon
+            const cashierId = await getCashierIdByBankWindowId(bankWindow.id)
+            const serviceIds = await getServiceIdsByCashierId(cashierId)
+            if(serviceIds.length != 0) {
+                const talons = await getAllTalons(serviceIds, 'ожидание')
+                const talonsWithTypes = await Promise.all(talons.map(async talon => {
+                    const type = await getTypesByServiceIds(talon.serviceId); talon.type = type; return talon
                 }));
                 bankWindow.talons = talonsWithTypes
                 return bankWindow
-            }));
-            BankWindowStore.setBankWindows(bankWindowsWithTalon)
-        })
-    }
-
-    async function getLastTalonWithType() {
-        const lastTalon = await getLastTalonByUserId(UserStore.userId)
-        if(lastTalon){
-            const types = await getTypesByServiceIds(lastTalon.serviceId)
-            lastTalon.type = types[0]
-            UserStore.setLastTalon(lastTalon)
-        }
+            } else {
+                return bankWindow
+            }
+        }))
+        return bankWindowsWithTalons
     }
 
     function logoButtonHandler() {
@@ -397,29 +437,43 @@ const HomePage = observer(() => {
         setAnchorEl(null);
     }
 
-    function exitButtonHandler() {
-        if(UserStore.role == 'CASHIER'){
-            console.log('cтираю')
-            UserStore.isWorking == 'true' && setBankWindowCashierId(UserStore.workingWindowId, null)
-            localStorage.setItem('isWorking', 'false')
-            localStorage.setItem('workingWindow', 'null')
-            BankWindowStore.selectedTalonId.length != 0 && setTalonStatus(BankWindowStore.selectedTalonId, 'обслужен')
-            localStorage.setItem('selectedTalonId', '')
-            localStorage.setItem('selectedTalon', '')
-            BankWindowStore.setSelectedTalonId('')
-            BankWindowStore.setSelectedTalon('')
-            getBankWindowsWithTalon()
+    async function exitButtonHandler() {
+        if (UserStore.user.role == 'CASHIER'){
+            if(CashierStore.servicedTalon) {
+                setTalonStatus(CashierStore.servicedTalon.id, 'обслужен')
+                CashierStore.setServicedTalon(null)
+            }
+            if(CashierStore.bankWindow) {
+                setBankWindowCashierId(CashierStore.bankWindow.id, null)
+                CashierStore.setBankWindow(null)
+            }
+            const bankWindows = await getBankWindows()
+            BankWindowStore.setBankWindows(bankWindows)
         }
-        UserStore.setIsAuth('false')
-        UserStore.setRole('null')
-        UserStore.setUserId('null')
-        localStorage.setItem('isAuth', 'false')
-        localStorage.setItem('role', 'null')
-        localStorage.setItem('userId', 'null')
+        if (UserStore.user.role == 'USER') {
+            if (UserStore.lastTalon) {
+                UserStore.setLastTalon(null)
+            }
+        }
+        UserStore.setUser(null)
+        localStorage.removeItem('token')
     }
 
-    function cancelButtonHandler(talonId) {
-        setTalonStatus(talonId, 'отменён')
+    async function cancelButtonHandler(talonId) {
+        const talon = await setTalonStatus(talonId, 'отменён')
+        const type = await getTypesByServiceIds(talon.serviceId)
+        talon.type = type
+        const bankWindows = await getBankWindows()
+        UserStore.setLastTalon(talon)
+        BankWindowStore.setBankWindows(bankWindows)
+    }
+
+    if (isLoading) {
+        return (
+            <LoadingContainer>
+                <LoadingIcon/>
+            </LoadingContainer>
+        )
     }
 
     return (
@@ -427,11 +481,11 @@ const HomePage = observer(() => {
             <Header>
                 <HeaderContentContainer>
                     <Logo onClick={logoButtonHandler}>БЕЛБАНК</Logo>
-                    {UserStore.role == 'USER' && <UserButton disableRipple variant='outlined' onClick={userButtonHandler}>Заказать талон</UserButton>}
+                    {UserStore.user && UserStore.user.role == 'USER' && <UserButton disableRipple variant='outlined' onClick={userButtonHandler}>Заказать талон</UserButton>}
                     <HeaderButtonsContainer>
-                        {UserStore.role == 'ADMIN' && <AdminButton disableRipple variant='outlined' onClick={adminButtonHandler}>Админ панель</AdminButton>} 
-                        {UserStore.role == 'CASHIER' && <EmployeeButton disableRipple variant='outlined' onClick={employeeButtonHandler}>Рабочее место</EmployeeButton>}
-                        {UserStore.isAuth == 'true' ?
+                        {UserStore.user && UserStore.user.role == 'ADMIN' && <AdminButton disableRipple variant='outlined' onClick={adminButtonHandler}>Админ панель</AdminButton>} 
+                        {UserStore.user && UserStore.user.role == 'CASHIER' && <EmployeeButton disableRipple variant='outlined' onClick={employeeButtonHandler}>Рабочее место</EmployeeButton>}
+                        {UserStore.user ?
                         <Box>
                             <IconButton
                                 onClick={handleMenu}
@@ -474,26 +528,36 @@ const HomePage = observer(() => {
                                 <BoardTitle>{bankWindow.number}</BoardTitle>
                             </BoardItem>
                         ) :
-                        <BoardMessage>В данный момент нет открытых окон</BoardMessage>
+                        <BoardMessageContainer>
+                            <BoardMessage>В данный момент нет открытых окон</BoardMessage>
+                        </BoardMessageContainer>
                     }
                 </Board>
-                {UserStore.role == 'USER' && UserStore.lastTalon &&
+                {UserStore.user && UserStore.user.role == 'USER' &&
                     <UserTalonWindowContainer elevation={9}>
                         <UserTalonWindowTitleContainer>
                             <UserTalonWindowTitle>Ваш талон</UserTalonWindowTitle>
                         </UserTalonWindowTitleContainer>
-                        <UserTalonContainer>
-                            <UserTalon elevation={9}>
-                                <UserTalonNumber>{`${UserStore.lastTalon.type}-${UserStore.lastTalon.number}`}</UserTalonNumber>
-                                <UserTalonStatusContainer>
-                                    <UserTalonStatus>статус:</UserTalonStatus>
-                                    <UserTalonColoredStatus status={UserStore.lastTalon.status}>{UserStore.lastTalon.status}</UserTalonColoredStatus>
-                                </UserTalonStatusContainer>
-                            </UserTalon>
-                        </UserTalonContainer>
-                        {UserStore.lastTalon.status == 'ожидание' &&
-                            <CancelButton disableRipple onClick={() => cancelButtonHandler(UserStore.lastTalon.id)}>Отменить</CancelButton>
-                        }
+                        {UserStore.lastTalon ?
+                            <React.Fragment>
+                                <UserTalonContainer>
+                                    <UserTalon elevation={9}>
+                                        <UserTalonNumber>{`${UserStore.lastTalon.type}-${UserStore.lastTalon.number}`}</UserTalonNumber>
+                                        <UserTalonStatusContainer>
+                                            <UserTalonStatus>статус:</UserTalonStatus>
+                                            <UserTalonColoredStatus status={UserStore.lastTalon.status}>{UserStore.lastTalon.status}</UserTalonColoredStatus>
+                                        </UserTalonStatusContainer>
+                                    </UserTalon>
+                                </UserTalonContainer>
+                                {UserStore.lastTalon.status == 'ожидание' &&
+                                    <CancelButton disableRipple onClick={() => cancelButtonHandler(UserStore.lastTalon.id)}>Отменить</CancelButton>
+                                }</React.Fragment> :
+                            <UserTalonMessageContainer>
+                                <UserTalonMessage>
+                                    Вы еще ни разу не заказывали талон
+                                </UserTalonMessage>
+                            </UserTalonMessageContainer>
+                            }
                     </UserTalonWindowContainer>
                 }
             </BoardAndUserTalonsContainer>

@@ -50,6 +50,19 @@ class BankWindowController {
         const bankWindow = await BankWindow.findOne({where: {id}})
         return res.json(bankWindow.cashierId)
     }
+
+    async getByCashierId(req, res) {
+        const {cashierId} = req.params
+        const bankWindow = await BankWindow.findOne({where: {cashierId}})
+        return res.json(bankWindow)
+    }
+
+    async setStatus(req, res) {
+        const {id, status} = req.body
+        await BankWindow.update({status}, {where: {id}})
+        const bankWindow = await BankWindow.findOne({where: {id}})
+        return res.json(bankWindow)
+    }
 }
 
 module.exports = new BankWindowController()

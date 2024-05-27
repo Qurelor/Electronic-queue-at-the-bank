@@ -2,6 +2,7 @@ import {makeAutoObservable} from 'mobx';
 
 class TalonStore {
     talons = []
+    
     constructor() {
         makeAutoObservable(this)
     }

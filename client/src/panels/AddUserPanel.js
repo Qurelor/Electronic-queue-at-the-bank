@@ -23,6 +23,7 @@ import {getAllServicesWithoutCashier, setServiceCashierId} from '../http/service
 import FormGroup from '@mui/material/FormGroup';
 import Checkbox from '@mui/material/Checkbox';
 import Box from '@mui/material/Box';
+import {jwtDecode} from 'jwt-decode';
 
 const PanelContainer = styled(Paper)({
     width: '450px',
@@ -143,7 +144,8 @@ const StyledButton = styled(Button)({
         color: 'white'
     },
     marginTop: '20px',
-    fontSize: '15px'
+    fontSize: '15px',
+    textTransform: 'none'
 })
 
 const RegButton = styled(Button)({
@@ -158,7 +160,7 @@ const RegButton = styled(Button)({
     }
 })
 
-const AddUserPanel = () => {
+const AddUserPanel = ({setIsLoading}) => {
 
     const [name, setName] = useState('')
     const [nameErrorMessage, setNameErrorMessage] = useState('')
@@ -170,7 +172,6 @@ const AddUserPanel = () => {
     const [emailErrorMessage, setEmailErrorMessage] = useState('')
     const [password, setPassword] = useState('')
     const [passwordErrorMessage, setPasswordErrorMessage] = useState('')
-    const [serviceErrorMessage, setServiceErrorMessage] = useState('')
     const [role, setRole] = useState('USER')
     const [openDialog, setOpenDialog] = useState(false)
     const typesTemp = {}
@@ -184,6 +185,7 @@ const AddUserPanel = () => {
         getAllServicesWithoutCashier('id', 'asc').then((data) => {ServiceStore.setServices(data); return ServiceStore.services})
             .then(services => {services.map(service => typesTemp[`${service.type}`] = false); return typesTemp})
             .then(typesTemp => {setTypes(typesTemp); setConfirmedTypes(typesTemp)})
+            .then(() => setIsLoading(false))
     }, [])
 
     function checkName() {
@@ -257,11 +259,11 @@ const AddUserPanel = () => {
 
     const handleClickOpenDialog = () => {
         setOpenDialog(true);
+        setTypes(confirmedTypes)
     };
     
     const handleCloseDialog = () => {
         setOpenDialog(false);
-        setTypes(confirmedTypes)
     };
 
     function typeCheckboxHandler(e) {
@@ -285,15 +287,15 @@ const AddUserPanel = () => {
         checkEmail()
         checkPassword()
         if (checkName() && checkSurname() && checkPatronymic() && checkEmail() && checkPassword()) {
-            const user = await registration((patronymic.length > 0) ? `${surname} ${name} ${patronymic}` : `${surname} ${name}`, email, password, role)
-            if (user == 'Пользователь с таким адресом электронной почты уже существует') {
-                setEmailErrorMessage(user)
+            const response = await registration((patronymic.length > 0) ? `${surname} ${name} ${patronymic}` : `${surname} ${name}`, email, password, role)
+            if (response == 'Пользователь с таким адресом электронной почты уже существует') {
+                setEmailErrorMessage(response)
             } else {
+                const user = jwtDecode(response.token)
                 if(user.role == 'CASHIER') {
                     const cashier = await createCashier(user.id)
                     selectedTypeIds.length != 0 && selectedTypeIds.forEach(selectedTypeId => {setServiceCashierId(selectedTypeId, cashier.id); ServiceStore.deleteService(selectedTypeId)})
                 }
-                console.log(user)
                 UserStore.addUser(user)
                 setName('')
                 setSurname('')

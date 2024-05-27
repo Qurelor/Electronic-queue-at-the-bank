@@ -11,6 +11,13 @@ import {observer} from 'mobx-react-lite';
 import CircularProgress from '@mui/material/CircularProgress';
 import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
+import {jwtDecode} from 'jwt-decode'
+import {checkToken} from '../http/userAPI';
+import {getCashierIdByUserId} from '../http/cashierAPI';
+import {getBankWindowByCashierId} from '../http/bankWindowAPI';
+import CashierStore from '../store/CashierStore';
+import {getServicedTalonByBankWindowId} from '../http/talonAPI';
+
 
 const LoadingContainer = styled(Box)({
     display: 'flex',
@@ -26,23 +33,30 @@ const LoadingIcon = styled(CircularProgress)({
 
 const AppRouter = observer(() => {
 
-    const [isLoading, setIsLoading] = useState(false)
+    const [isLoading, setIsLoading] = useState(true)
     
     useEffect(() => {
-        setIsLoading(true)
-        UserStore.setIsAuth(localStorage.getItem('isAuth'))
-        UserStore.setUserId(localStorage.getItem('userId'))
-        UserStore.setRole(localStorage.getItem('role'))
-        if (UserStore.isAuth == 'true') {
-            if(UserStore.role == 'CASHIER'){
-                UserStore.setIsWorking(localStorage.getItem('isWorking') || 'false')
-                if (UserStore.isWorking == 'true') {
-                    UserStore.setWorkingWindowId(localStorage.getItem('workingWindowId') || '')
-                    UserStore.setWorkingWindowNumber(localStorage.getItem('workingWindowNumber') || '')
+        async function checkUser() {
+            if (localStorage.getItem('token')) {
+                if (checkToken(localStorage.getItem('token')) != 'Пользователь неавторизован') {
+                    const user = jwtDecode(localStorage.getItem('token'))
+                    UserStore.setUser(user)
+                    if (UserStore.user.role == 'CASHIER') {
+                        const cashierId = await getCashierIdByUserId(UserStore.user.id)
+                        const bankWindow = await getBankWindowByCashierId(cashierId)
+                        if (bankWindow) {
+                            CashierStore.setBankWindow(bankWindow)
+                            const servicedTalon = await getServicedTalonByBankWindowId(bankWindow.id)
+                            if (servicedTalon) {
+                                CashierStore.setServicedTalon(servicedTalon)
+                            }
+                        }
+                    }
                 }
             }
+            setIsLoading(false)
         }
-        setIsLoading(false)
+        checkUser()
     }, [])
 
     if (isLoading) {
@@ -59,9 +73,9 @@ const AppRouter = observer(() => {
                 <Route path='/' Component={HomePage}/>
                 <Route path='/auth' Component={AuthPage}/>
                 <Route path='/reg' Component={RegPage}/>
-                {UserStore.isAuth == 'true' && UserStore.role == 'ADMIN' && <Route path='/admin' Component={AdminPage}/>}
-                {UserStore.isAuth == 'true' && UserStore.role == 'CASHIER' && <Route path='/cashier' Component={CashierPage}/>}
-                {UserStore.isAuth == 'true' && UserStore.role == 'USER' && <Route path='/user' Component={UserPage}/>}
+                {UserStore.user && UserStore.user.role == 'ADMIN' && <Route path='/admin' Component={AdminPage}/>}
+                {UserStore.user && UserStore.user.role == 'CASHIER' && <Route path='/cashier' Component={CashierPage}/>}
+                {UserStore.user && UserStore.user.role == 'USER' && <Route path='/user' Component={UserPage}/>}
             </Routes>
         </div>
     );

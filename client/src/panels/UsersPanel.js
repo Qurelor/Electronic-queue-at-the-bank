@@ -1,16 +1,14 @@
 import Paper from '@mui/material/Paper';
 import {getAllUsers} from '../http/userAPI';
-import {useEffect, useState} from 'react';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import TableSortLabel from '@mui/material/TableSortLabel';
+import {useEffect, useState, useRef} from 'react';
 import UserStore from '../store/UserStore';
 import {observer} from 'mobx-react-lite';
-import { styled } from '@mui/material/styles';
+import {styled} from '@mui/material/styles';
+import {AgGridReact} from "ag-grid-react";
+import 'ag-grid-community/styles/ag-grid.css';
+import 'ag-grid-community/styles/ag-theme-quartz.css';
+import TextField from '@mui/material/TextField';
+import {toJS} from 'mobx';
 
 const PanelBackground = styled(Paper)({
     paddingLeft: '40px',
@@ -20,208 +18,80 @@ const PanelBackground = styled(Paper)({
     marginRight: '20px'
 })
 
-const PanelTableContainer = styled(TableContainer)({
-    borderTop: '1px solid black',
-    borderLeft: '1px solid black',
-    borderRight: '1px solid black'
-})
-
-const PanelTable = styled(Table)({
-    minWidth: '650px'
-})
-
-const FirstTableRow = styled(TableRow)({
-    backgroundColor: 'rgba(128, 128, 128, 0.3)'
-})
-
-const StyledTableCell = styled(TableCell)({
-    borderRight: '1px solid black',
-    borderBottom: '1px solid black',
+const TableContainer = styled('div')({
+    '--ag-active-color': 'limegreen',
+    width: '60vw',
     fontSize: '15px',
-    color: 'black'
+    '--ag-wrapper-border-radius': '4px'
 })
 
-const LastStyledTableCell = styled(TableCell)({
-    borderBottom: '1px solid black',
-    fontSize: '15px',
-    color: 'black'
-})
-
-const StyledTableSortLabel = styled(TableSortLabel)({
-    '&.Mui-active .MuiTableSortLabel-icon': {
-        color: 'black'
+const Search = styled(TextField)({
+    '& .MuiOutlinedInput-root': {
+        fontSze: '15px'
     },
-    ':hover': {
-        color: 'black'
+    '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
+        borderColor: 'limegreen'
     },
-    ':focus': {
-        color: 'black'
-    }
+    '& .MuiInputLabel-root.Mui-focused': {
+        color: 'limegreen'
+    },
+    '& .MuiInputLabel-root': {
+        fontSize: '15px'
+    },
+    marginBottom: '20px'
 })
 
-const UsersPanel = observer(() => {
-    const [sortIdActive, setSortIdActive] = useState(false)
-    const [sortIdDirection, setSortIdDirection] = useState('asc')
-    const [sortFullNameActive, setSortFullNameActive] = useState(false)
-    const [sortFullNameDirection, setSortFullNameDirection] = useState('asc')
-    const [sortEmailActive, setSortEmailActive] = useState(false)
-    const [sortEmailDirection, setSortEmailDirection] = useState('asc')
-    const [sortPasswordActive, setSortPasswordActive] = useState(false)
-    const [sortPasswordDirection, setSortPasswordDirection] = useState('asc')
-    const [sortRoleActive, setSortRoleActive] = useState(false)
-    const [sortRoleDirection, setSortRoleDirection] = useState('asc')
+const UsersPanel = observer(({setIsLoading}) => {
+    const gridRef = useRef();
+    const [columnTitles, setColumnTitles] = useState([
+        {field: 'id', headerName: 'ID'},
+        {field: 'fullName', headerName: 'ФИО'},
+        {field: 'email', headerName: 'Адрес электронной почты'},
+        {field: 'password', headerName: 'Пароль'},
+        {field: 'role', headerName: 'Роль'}
+    ])
 
     useEffect(() => {
-        getAllUsers('id', 'asc').then(data => UserStore.setUsers(data))
+        getAllUsers('id', 'asc')
+        .then(data => UserStore.setUsers(data))
+        .then(setIsLoading(false))
     }, [])
 
-    async function sortIdButtonHandler() {
-        setSortFullNameActive(false)
-        setSortFullNameDirection('asc')
-        setSortEmailActive(false)
-        setSortEmailDirection('asc')
-        setSortPasswordActive(false)
-        setSortPasswordDirection('asc')
-        setSortRoleActive(false)
-        setSortRoleDirection('asc')
-        if (sortIdDirection == 'asc' && sortIdActive == false) {
-            setSortIdActive(true)
-            await getAllUsers('id', 'asc').then(data => UserStore.setUsers(data))
-        }
-        if (sortIdDirection == 'asc' && sortIdActive == true) {
-            setSortIdDirection('desc')
-            await getAllUsers('id', 'desc').then(data => UserStore.setUsers(data))
-        }
-        if (sortIdDirection == 'desc') {
-            setSortIdDirection('asc')
-            setSortIdActive(false)
-            await getAllUsers('id', 'asc').then(data => UserStore.setUsers(data))
-        }
+    function searchOnInput() {
+        gridRef.current.api.setGridOption(
+          'quickFilterText',
+          document.getElementById('search').value,
+        );
     }
 
-    async function sortFullNameButtonHandler() {
-        setSortIdActive(false)
-        setSortIdDirection('asc')
-        setSortEmailActive(false)
-        setSortEmailDirection('asc')
-        setSortPasswordActive(false)
-        setSortPasswordDirection('asc')
-        setSortRoleActive(false)
-        setSortRoleDirection('asc')
-        if (sortFullNameDirection == 'asc' && sortFullNameActive == false) {
-            setSortFullNameActive(true)
-            await getAllUsers('fullName', 'asc').then(data => UserStore.setUsers(data))
-        }
-        if (sortFullNameDirection == 'asc' && sortFullNameActive == true) {
-            setSortFullNameDirection('desc')
-            await getAllUsers('fullName', 'desc').then(data => UserStore.setUsers(data))
-        }
-        if (sortFullNameDirection == 'desc') {
-            setSortFullNameDirection('asc')
-            setSortFullNameActive(false)
-            await getAllUsers('id', 'asc').then(data => UserStore.setUsers(data))
-        }
-    }
+    const defaultColDef = {
+        flex: 0,
+    };
 
-    async function sortEmailButtonHandler() {
-        setSortIdActive(false)
-        setSortIdDirection('asc')
-        setSortFullNameActive(false)
-        setSortFullNameDirection('asc')
-        setSortPasswordActive(false)
-        setSortPasswordDirection('asc')
-        setSortRoleActive(false)
-        setSortRoleDirection('asc')
-        if (sortEmailDirection == 'asc' && sortEmailActive == false) {
-            setSortEmailActive(true)
-            await getAllUsers('email', 'asc').then(data => UserStore.setUsers(data))
-        }
-        if (sortEmailDirection == 'asc' && sortEmailActive == true) {
-            setSortEmailDirection('desc')
-            await getAllUsers('email', 'desc').then(data => UserStore.setUsers(data))
-        }
-        if (sortEmailDirection == 'desc') {
-            setSortEmailDirection('asc')
-            setSortEmailActive(false)
-            await getAllUsers('id', 'asc').then(data => UserStore.setUsers(data))
-        }
+    const autoSizeStrategy = {
+        type: 'fitGridWidth'
     }
-
-    async function sortPasswordButtonHandler() {
-        setSortIdActive(false)
-        setSortIdDirection('asc')
-        setSortFullNameActive(false)
-        setSortFullNameDirection('asc')
-        setSortEmailActive(false)
-        setSortEmailDirection('asc')
-        setSortRoleActive(false)
-        setSortRoleDirection('asc')
-        if (sortPasswordDirection == 'asc' && sortPasswordActive == false) {
-            setSortPasswordActive(true)
-            await getAllUsers('password', 'asc').then(data => UserStore.setUsers(data))
-        }
-        if (sortPasswordDirection == 'asc' && sortPasswordActive == true) {
-            setSortPasswordDirection('desc')
-            await getAllUsers('password', 'desc').then(data => UserStore.setUsers(data))
-        }
-        if (sortPasswordDirection == 'desc') {
-            setSortPasswordDirection('asc')
-            setSortPasswordActive(false)
-            await getAllUsers('id', 'asc').then(data => UserStore.setUsers(data))
-        }
-    }
-
-    async function sortRoleButtonHandler() {
-        setSortIdActive(false)
-        setSortIdDirection('asc')
-        setSortFullNameActive(false)
-        setSortFullNameDirection('asc')
-        setSortEmailActive(false)
-        setSortEmailDirection('asc')
-        setSortPasswordActive(false)
-        setSortPasswordDirection('asc')
-        if (sortRoleDirection == 'asc' && sortRoleActive == false) {
-            setSortRoleActive(true)
-            await getAllUsers('role', 'asc').then(data => UserStore.setUsers(data))
-        }
-        if (sortRoleDirection == 'asc' && sortRoleActive == true) {
-            setSortRoleDirection('desc')
-            await getAllUsers('role', 'desc').then(data => UserStore.setUsers(data))
-        }
-        if (sortRoleDirection == 'desc') {
-            setSortRoleDirection('asc')
-            setSortRoleActive(false)
-            await getAllUsers('id', 'asc').then(data => UserStore.setUsers(data))
-        }
-    }
-
 
     return (
         <PanelBackground elevation={9}>
-            <PanelTableContainer elevation={9}>
-                <PanelTable>
-                    <TableHead>
-                        <FirstTableRow>
-                            <StyledTableCell><StyledTableSortLabel active={sortIdActive} direction={sortIdDirection} onClick={sortIdButtonHandler}>ID</StyledTableSortLabel></StyledTableCell>
-                            <StyledTableCell><StyledTableSortLabel active={sortFullNameActive} direction={sortFullNameDirection} onClick={sortFullNameButtonHandler}>ФИО</StyledTableSortLabel></StyledTableCell>
-                            <StyledTableCell><StyledTableSortLabel active={sortEmailActive} direction={sortEmailDirection} onClick={sortEmailButtonHandler}>Адрес электронной почты</StyledTableSortLabel></StyledTableCell>
-                            <StyledTableCell><StyledTableSortLabel active={sortPasswordActive} direction={sortPasswordDirection} onClick={sortPasswordButtonHandler}>Пароль</StyledTableSortLabel></StyledTableCell>
-                            <LastStyledTableCell><StyledTableSortLabel active={sortRoleActive} direction={sortRoleDirection} onClick={sortRoleButtonHandler}>Роль</StyledTableSortLabel></LastStyledTableCell>
-                        </FirstTableRow>
-                    </TableHead>
-                    <TableBody>
-                        {UserStore.users.map(user => (
-                        <TableRow>
-                            <StyledTableCell>{user.id}</StyledTableCell>
-                            <StyledTableCell>{user.fullName}</StyledTableCell>
-                            <StyledTableCell>{user.email}</StyledTableCell>
-                            <StyledTableCell>{user.password}</StyledTableCell>
-                            <LastStyledTableCell>{user.role}</LastStyledTableCell>
-                        </TableRow>
-                        ))}
-                    </TableBody>
-                </PanelTable>
-            </PanelTableContainer>
+            <Search
+                id="search"
+                label='Поиск'
+                variant='outlined'    
+                onInput={searchOnInput}
+            />
+            <TableContainer
+                className='ag-theme-quartz'
+            >
+                <AgGridReact
+                    ref={gridRef}
+                    rowData={toJS(UserStore.users)}
+                    columnDefs={columnTitles}
+                    defaultColDef={defaultColDef}
+                    domLayout='autoHeight'
+                    autoSizeStrategy={autoSizeStrategy}
+                />
+            </TableContainer>
         </PanelBackground>
     );
 });

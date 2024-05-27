@@ -26,6 +26,10 @@ class ServiceController {
     async getTypesByIds(req, res) {
         const {ids} = req.params
         const idsArray = ids.split(',')
+        if(ids.length == 1) {
+            const service = await Service.findOne({where: {id: ids}})
+            return res.json(service.type)
+        }
         const services = await Service.findAll({where: {id: idsArray}})
         const typesArray = []
         services.map(service => typesArray.push(service.type))
@@ -49,6 +53,12 @@ class ServiceController {
         const idsArray = []
         services.map(service => idsArray.push(service.id))
         return res.json(idsArray)
+    }
+
+    async getAllByCashierId(req, res) {
+        const {cashierId} = req.params
+        const services = await Service.findAll({where: {cashierId}})
+        return res.json(services)
     }
 }
 

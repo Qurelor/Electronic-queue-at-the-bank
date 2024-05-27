@@ -18,6 +18,30 @@ import MenuItem from '@mui/material/MenuItem';
 import { styled } from '@mui/material/styles';
 import AddServicePanel from '../panels/AddServicePanel';
 import ServicesPanel from '../panels/ServicesPanel';
+import CircularProgress from '@mui/material/CircularProgress';
+import Backdrop from '@mui/material/Backdrop';
+
+const Loading = styled(Box)(({theme}) => ({
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'absolute',
+    height: '100vh',
+    width: '100vw',
+    color: 'limegreen',
+    zIndex: theme.zIndex.drawer + 1,
+    backgroundColor: 'white'
+}))
+
+const LoadingWindowContainer = styled(Box)({
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100vw',
+    height: '100vh',
+    color: 'limegreen',
+    backgroundColor: 'white'
+})
 
 const PageContainer = styled(Box)({
     display: 'flex',
@@ -74,11 +98,19 @@ const AccountButtonIcon = styled(AccountCircle)({
     fontSize: '40px'
 })
 
-const UsersAndBankWindowsContainer = styled(Box)({
+const PanelsContainer = styled(Box)({
     display: 'flex',
     marginTop: '110px',
     justifyContent: 'center',
     backgroundColor: 'limegreen',
+    paddingBottom: '40px',
+    flexDirection: 'row'
+})
+
+const CashiersPanelContainer = styled(Box)({
+    display: 'flex',
+    marginTop: '110px',
+    justifyContent: 'center',
     paddingBottom: '40px',
     flexDirection: 'row'
 })
@@ -161,12 +193,16 @@ const AdminPage = () => {
     const [showUsersPanel, setShowUsersPanel] = useState(false);
     const [showBankWindowsPanel, setShowBankWindowsPanel] = useState(false);
     const [showServicesPanel, setShowServicesPanel] = useState(false);
+    const [isLoadingAddPanel, setIsLoadingAddPanel] = useState(false);
+    const [isLoadingDataPanel, setIsLoadingDataPanel] = useState(false);
 
     function logoButtonHandler() {
         navigate('/')
     }
 
     function usersButtonHandler() {
+        setIsLoadingAddPanel(true)
+        setIsLoadingDataPanel(true)
         setShowUsersPanel(true)
     }
 
@@ -193,23 +229,24 @@ const AdminPage = () => {
     }
     
     function exitButtonHandler() {
-        UserStore.setIsAuth('false')
-        UserStore.setRole('null')
-        UserStore.setUserId('null')
-        localStorage.setItem('isAuth', 'false')
-        localStorage.setItem('role', 'null')
-        localStorage.setItem('userId', 'null')
+        localStorage.removeItem('token')
+        UserStore.setUser(null)
         navigate('/')
     }
 
     return (
         <PageContainer>
+            {(isLoadingAddPanel || isLoadingDataPanel) &&
+            <Loading
+            >
+                <CircularProgress color="inherit" />
+            </Loading>}
             <Header>
                 <HeaderContentContainer>
                     <Logo onClick={logoButtonHandler}>БЕЛБАНК</Logo>
                     <HeaderButtonsContainer>
                         <AdminButton disableRipple variant='outlined' onClick={adminButtonHandler}>
-                            Админ панель
+                            Админ. панель
                         </AdminButton>
                         <IconButton onClick={handleMenu}>
                             <AccountButtonIcon/>
@@ -234,20 +271,20 @@ const AdminPage = () => {
                 </HeaderContentContainer>
             </Header>
             {(showUsersPanel || showBankWindowsPanel || showServicesPanel) && 
-            <UsersAndBankWindowsContainer>
+            <PanelsContainer>
                 <Box>
-                    {showUsersPanel && <AddUserPanel></AddUserPanel>}
+                    {showUsersPanel && <AddUserPanel setIsLoading={setIsLoadingAddPanel}></AddUserPanel>}
                     {showBankWindowsPanel && <AddBankWindowPanel></AddBankWindowPanel>}
                     {showServicesPanel && <AddServicePanel></AddServicePanel>}
                     <Box/>
                 </Box>
                 <Box>
-                    {showUsersPanel && <UsersPanel></UsersPanel>}
+                    {showUsersPanel && <UsersPanel setIsLoading={setIsLoadingDataPanel}></UsersPanel>}
                     {showBankWindowsPanel && <BankWindowsPanel></BankWindowsPanel>}
                     {showServicesPanel && <ServicesPanel></ServicesPanel>}
                     <Box/>
                 </Box>
-            </UsersAndBankWindowsContainer>}
+            </PanelsContainer>}
             {!showUsersPanel && !showBankWindowsPanel && !showServicesPanel &&
             <ButtonsContainer>
                 <BackgroundButtons elevation={9}>
