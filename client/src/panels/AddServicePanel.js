@@ -10,6 +10,8 @@ import Slide from '@mui/material/Slide';
 import { styled } from '@mui/material/styles';
 import {TYPE_REGEXP} from '../constants'
 import {addService} from '../http/serviceAPI';
+import Backdrop from '@mui/material/Backdrop';
+import CircularProgress from '@mui/material/CircularProgress';
 
 const PanelContainer = styled(Paper)({
     width: '450px',
@@ -59,6 +61,15 @@ const AddServiceButton = styled(Button)({
     }
 })
 
+const Loading = styled(Backdrop)(({theme}) => ({
+    position: 'absolute',
+    zIndex: theme.zIndex.drawer + 1
+}))
+
+const LoadingIcon = styled(CircularProgress)({
+    color: 'limegreen'
+})
+
 const AddServicePanel = () => {
 
     const [type, setType] = useState('')
@@ -66,6 +77,7 @@ const AddServicePanel = () => {
     const [description, setDescription] = useState('')
     const [descriptionErrorMessage, setDescriptionErrorMessage] = useState('')
     const [open, setOpen] = useState(false)
+    const [isLoading, setIsLoading] = useState(false)
 
     function checkType() {
         if (type.length == 0) {
@@ -91,6 +103,7 @@ const AddServicePanel = () => {
     }
 
     async function addServiceButtonHandler() {
+        setIsLoading(true)
         checkType()
         checkDescription()
         if (checkType() && checkDescription()) {
@@ -109,6 +122,7 @@ const AddServicePanel = () => {
                 setOpen(true)
             }
         }
+        setIsLoading(false)
     }
 
     function handleCloseAlert() {
@@ -145,6 +159,11 @@ const AddServicePanel = () => {
                     Услуга успешно добавлена!
                 </Alert>
             </Snackbar>
+            <Loading
+                open={isLoading}
+            >
+                <LoadingIcon/>
+            </Loading>
         </PanelContainer>
     );
 };

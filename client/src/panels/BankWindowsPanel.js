@@ -39,7 +39,7 @@ const Search = styled(TextField)({
     marginBottom: '20px'
 })
 
-const BankWindowsPanel = observer(() => {
+const BankWindowsPanel = observer(({setIsLoadingPanel}) => {
     const gridRef = useRef();
     const [columnTitles, setColumnTitles] = useState([
         {field: 'id', headerName: 'ID'},
@@ -48,7 +48,7 @@ const BankWindowsPanel = observer(() => {
     ])
 
     useEffect(() => {
-        getAllBankWindows('id', 'asc').then(data => BankWindowStore.setBankWindows(data))
+        getAllBankWindows('id', 'asc').then(data => BankWindowStore.setBankWindows(data)).finally(() => setIsLoadingPanel(false))
     }, [])
 
     function searchOnInput() {

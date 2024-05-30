@@ -24,20 +24,22 @@ import FormGroup from '@mui/material/FormGroup';
 import Checkbox from '@mui/material/Checkbox';
 import Box from '@mui/material/Box';
 import {jwtDecode} from 'jwt-decode';
+import Backdrop from '@mui/material/Backdrop';
+import CircularProgress from '@mui/material/CircularProgress';
 
 const PanelContainer = styled(Paper)({
     width: '450px',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
+    paddingLeft: '40px',
+    paddingRight: '40px',
+    paddingTop: '20px',
+    paddingBottom: '20px',
     position: 'sticky',
     top: '110px',
     marginLeft: '20px',
     marginRight: '20px',
-    paddingLeft: '40px',
-    paddingRight: '40px',
-    paddingTop: '20px',
-    paddingBottom: '20px'
 })
 
 const Title = styled(Typography)({
@@ -160,7 +162,16 @@ const RegButton = styled(Button)({
     }
 })
 
-const AddUserPanel = ({setIsLoading}) => {
+const Loading = styled(Backdrop)(({theme}) => ({
+    position: 'absolute',
+    zIndex: theme.zIndex.drawer + 1
+}))
+
+const LoadingIcon = styled(CircularProgress)({
+    color: 'limegreen'
+})
+
+const AddUserPanel = ({setIsLoadingPanel}) => {
 
     const [name, setName] = useState('')
     const [nameErrorMessage, setNameErrorMessage] = useState('')
@@ -180,12 +191,13 @@ const AddUserPanel = ({setIsLoading}) => {
     const [selectedTypeIds, setSelectedTypeIds] = useState([])
     const [selectedTypeNames, setSelectedTypeNames] = useState([])
     const [openAlert, setOpenAlert] = useState(false)
+    const [isLoading, setIsLoading] = useState(false)
 
     useEffect(() => {
         getAllServicesWithoutCashier('id', 'asc').then((data) => {ServiceStore.setServices(data); return ServiceStore.services})
             .then(services => {services.map(service => typesTemp[`${service.type}`] = false); return typesTemp})
             .then(typesTemp => {setTypes(typesTemp); setConfirmedTypes(typesTemp)})
-            .then(() => setIsLoading(false))
+            .finally(() => setIsLoadingPanel(false))
     }, [])
 
     function checkName() {
@@ -281,6 +293,7 @@ const AddUserPanel = ({setIsLoading}) => {
     }
 
     async function regButtonHandler() {
+        setIsLoading(true)
         checkName()
         checkSurname()
         checkPatronymic()
@@ -310,6 +323,7 @@ const AddUserPanel = ({setIsLoading}) => {
                 setOpenAlert(true)
             }
         }
+        setIsLoading(false)
     }
 
     function handleCloseAlert() {
@@ -318,86 +332,91 @@ const AddUserPanel = ({setIsLoading}) => {
 
     return (
         <PanelContainer elevation={9}>
-                <Title>Создание пользователя</Title>
-                <PanelTextField 
-                    label='Имя' 
-                    value={name}
-                    onChange={e => setName(e.target.value)} 
-                    error={nameErrorMessage.length == 0 ? false : true} 
-                    helperText={nameErrorMessage.length == 0 ? false : nameErrorMessage} 
-                    variant='outlined'
-                    errorMessage={nameErrorMessage}
-                />
-                <PanelTextField 
-                    label='Фамилия'
-                    value={surname}
-                    onChange={e => setSurname(e.target.value)} 
-                    error={surnameErrorMessage.length == 0 ? false : true} 
-                    helperText={surnameErrorMessage.length == 0 ? false : surnameErrorMessage} 
-                    variant='outlined'
-                    errorMessage={surnameErrorMessage}
-                />
-                <PanelTextField 
-                    label='Отчество (необязательно)' 
-                    value={patronymic}
-                    onChange={e => setPatronymic(e.target.value)} 
-                    error={patronymicErrorMessage.length == 0 ? false : true} 
-                    helperText={patronymicErrorMessage.length == 0 ? false : patronymicErrorMessage} 
-                    variant='outlined'
-                    errorMessage={patronymicErrorMessage}
-                />
-                <PanelTextField 
-                    label='Адрес электронной почты' 
-                    value={email}
-                    onChange={e => setEmail(e.target.value)} 
-                    error={emailErrorMessage.length == 0 ? false : true} 
-                    helperText={emailErrorMessage.length == 0 ? false : emailErrorMessage} 
-                    variant='outlined'
-                    errorMessage={emailErrorMessage}
-                />
-                <PanelTextField 
-                    label='Пароль'
-                    value={password}
-                    onChange={e => setPassword(e.target.value)} 
-                    error={passwordErrorMessage.length == 0 ? false : true} 
-                    helperText={passwordErrorMessage.length == 0 ? false : passwordErrorMessage} 
-                    variant='outlined'
-                    errorMessage={passwordErrorMessage}
-                />
-                <RoleFormControl>
-                    <RoleFormLabel>Роль</RoleFormLabel>
-                    <RoleRadioGroup
-                        value={role}
-                        onChange={handleChangeRole}
-                    >
-                        <FormControlLabel value='ADMIN' control={<Radio/>} label='Администратор'/>
-                        <FormControlLabel value='CASHIER' control={<Radio/>} label='Кассир'/>
-                        <FormControlLabel value='USER' control={<Radio/>} label='Пользователь'/>
-                    </RoleRadioGroup>
-                </RoleFormControl>
-                {role == 'CASHIER' && <CashierButton disableRipple onClick={handleClickOpenDialog}>Выберите услуги за которые отвечает кассир</CashierButton>}
-                {role == 'CASHIER' && selectedTypeNames.length != 0 && <StyledTypography>Выбрано: {selectedTypeNames.join(', ')}.</StyledTypography>}
-                <RegButton disableRipple variant='contained' onClick={regButtonHandler}>Создать пользователя</RegButton>
-                <StyledDialog onClose={handleCloseDialog} open={openDialog}>
-                    <StyledDialogTitle>Услуги за которые отвечает кассир:</StyledDialogTitle>
-                    {ServiceStore.services.length != 0 ?
-                    <StyledFormGroup>
-                        {ServiceStore.services.map(service =>
-                            <FormControlLabel control={<StyledCheckbox checked={types[`${service.type}`]} onClick={typeCheckboxHandler} name={`${service.type}`}/>} label={`(${service.type})${service.description}`}/>
-                        )}
-                    </StyledFormGroup> :
-                    <MessageBox>В данный момент неназначенных услуг нет</MessageBox>
-                    }
-                    <StyledButton disableRipple onClick={confirmButtonHandler}>{ServiceStore.services.length != 0 ? 'Выбрать' : 'Выйти'}</StyledButton>
-                </StyledDialog>
-                <Snackbar open={openAlert} autoHideDuration={6000} onClose={handleCloseAlert} TransitionComponent={Slide}>
-                    <Alert
-                        severity='success'
-                        variant='filled'
-                    >
-                        Пользователь успешно создан!
-                    </Alert>
-                </Snackbar>
+            <Title>Создание пользователя</Title>
+            <PanelTextField 
+                label='Имя' 
+                value={name}
+                onChange={e => setName(e.target.value)} 
+                error={nameErrorMessage.length == 0 ? false : true} 
+                helperText={nameErrorMessage.length == 0 ? false : nameErrorMessage} 
+                variant='outlined'
+                errorMessage={nameErrorMessage}
+            />
+            <PanelTextField 
+                label='Фамилия'
+                value={surname}
+                onChange={e => setSurname(e.target.value)} 
+                error={surnameErrorMessage.length == 0 ? false : true} 
+                helperText={surnameErrorMessage.length == 0 ? false : surnameErrorMessage} 
+                variant='outlined'
+                errorMessage={surnameErrorMessage}
+            />
+            <PanelTextField 
+                label='Отчество (необязательно)' 
+                value={patronymic}
+                onChange={e => setPatronymic(e.target.value)} 
+                error={patronymicErrorMessage.length == 0 ? false : true} 
+                helperText={patronymicErrorMessage.length == 0 ? false : patronymicErrorMessage} 
+                variant='outlined'
+                errorMessage={patronymicErrorMessage}
+            />
+            <PanelTextField 
+                label='Адрес электронной почты' 
+                value={email}
+                onChange={e => setEmail(e.target.value)} 
+                error={emailErrorMessage.length == 0 ? false : true} 
+                helperText={emailErrorMessage.length == 0 ? false : emailErrorMessage} 
+                variant='outlined'
+                errorMessage={emailErrorMessage}
+            />
+            <PanelTextField 
+                label='Пароль'
+                value={password}
+                onChange={e => setPassword(e.target.value)} 
+                error={passwordErrorMessage.length == 0 ? false : true} 
+                helperText={passwordErrorMessage.length == 0 ? false : passwordErrorMessage} 
+                variant='outlined'
+                errorMessage={passwordErrorMessage}
+            />
+            <RoleFormControl>
+                <RoleFormLabel>Роль</RoleFormLabel>
+                <RoleRadioGroup
+                    value={role}
+                    onChange={handleChangeRole}
+                >
+                    <FormControlLabel value='ADMIN' control={<Radio/>} label='Администратор'/>
+                    <FormControlLabel value='CASHIER' control={<Radio/>} label='Кассир'/>
+                    <FormControlLabel value='USER' control={<Radio/>} label='Пользователь'/>
+                </RoleRadioGroup>
+            </RoleFormControl>
+            {role == 'CASHIER' && <CashierButton disableRipple onClick={handleClickOpenDialog}>Выберите услуги за которые отвечает кассир</CashierButton>}
+            {role == 'CASHIER' && selectedTypeNames.length != 0 && <StyledTypography>Выбрано: {selectedTypeNames.join(', ')}.</StyledTypography>}
+            <RegButton disableRipple variant='contained' onClick={regButtonHandler}>Создать пользователя</RegButton>
+            <StyledDialog onClose={handleCloseDialog} open={openDialog}>
+                <StyledDialogTitle>Услуги за которые отвечает кассир:</StyledDialogTitle>
+                {ServiceStore.services.length != 0 ?
+                <StyledFormGroup>
+                    {ServiceStore.services.map(service =>
+                        <FormControlLabel control={<StyledCheckbox checked={types[`${service.type}`]} onClick={typeCheckboxHandler} name={`${service.type}`}/>} label={`(${service.type})${service.description}`}/>
+                    )}
+                </StyledFormGroup> :
+                <MessageBox>В данный момент неназначенных услуг нет</MessageBox>
+                }
+                <StyledButton disableRipple onClick={confirmButtonHandler}>{ServiceStore.services.length != 0 ? 'Выбрать' : 'Выйти'}</StyledButton>
+            </StyledDialog>
+            <Snackbar open={openAlert} autoHideDuration={6000} onClose={handleCloseAlert} TransitionComponent={Slide}>
+                <Alert
+                    severity='success'
+                    variant='filled'
+                >
+                    Пользователь успешно создан!
+                </Alert>
+            </Snackbar>
+            <Loading
+                open={isLoading}
+            >
+                <LoadingIcon/>
+            </Loading>
         </PanelContainer>
     );
 };

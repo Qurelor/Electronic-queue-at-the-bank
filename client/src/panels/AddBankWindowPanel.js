@@ -9,6 +9,8 @@ import Alert from '@mui/material/Alert';
 import Slide from '@mui/material/Slide';
 import {createBankWindow} from '../http/bankWindowAPI';
 import { styled } from '@mui/material/styles';
+import Backdrop from '@mui/material/Backdrop';
+import CircularProgress from '@mui/material/CircularProgress';
 
 const PanelContainer = styled(Paper)({
     width: '450px',
@@ -58,11 +60,21 @@ const AddBankWindowButton = styled(Button)({
     }
 })
 
+const Loading = styled(Backdrop)(({theme}) => ({
+    position: 'absolute',
+    zIndex: theme.zIndex.drawer + 1
+}))
+
+const LoadingIcon = styled(CircularProgress)({
+    color: 'limegreen'
+})
+
 const AddBankWindowPanel = () => {
 
     const [number, setNumber] = useState('')
     const [numberErrorMessage, setNumberErrorMessage] = useState('')
     const [open, setOpen] = useState(false)
+    const [isLoading, setIsLoading] = useState(false)
 
     function checkNumber() {
         if (!Number.isInteger(Number(number)) || Number(number) < 1) {
@@ -75,6 +87,7 @@ const AddBankWindowPanel = () => {
     }
 
     async function addBankWindowButtonHandler() {
+        setIsLoading(true)
         checkNumber()
         if (checkNumber()) {
             const data = await createBankWindow(number)
@@ -86,6 +99,7 @@ const AddBankWindowPanel = () => {
                 setOpen(true)
             }
         }
+        setIsLoading(false)
     }
 
     function handleCloseAlert() {
@@ -113,6 +127,11 @@ const AddBankWindowPanel = () => {
                     Окно успешно создано!
                 </Alert>
             </Snackbar>
+            <Loading
+                open={isLoading}
+            >
+                <LoadingIcon/>
+            </Loading>
         </PanelContainer>
     );
 };

@@ -4,6 +4,7 @@ class UserStore {
     users = []
     user = null
     lastTalon = null
+    receivedTalon = null
     
     constructor() {
         makeAutoObservable(this)
@@ -23,6 +24,10 @@ class UserStore {
 
     setLastTalon(lastTalon) {
         this.lastTalon = lastTalon
+    }
+
+    setReceivedTalon(receivedTalon) {
+        this.receivedTalon = receivedTalon
     }
 }
 

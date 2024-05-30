@@ -21,6 +21,8 @@ import UserStore from '../store/UserStore';
 import { styled } from '@mui/material/styles';
 import {EMAIL_REGEXP} from '../constants';
 import {jwtDecode} from 'jwt-decode';
+import Backdrop from '@mui/material/Backdrop';
+import CircularProgress from '@mui/material/CircularProgress';
 
 const PageContainer = styled(Box)({
     display: 'flex',
@@ -132,6 +134,14 @@ const AuthButton = styled(Button)({
     }
 })
 
+const Loading = styled(Backdrop)(({theme}) => ({
+    zIndex: theme.zIndex.modal + 1
+}))
+
+const LoadingIcon = styled(CircularProgress)({
+    color: 'limegreen'
+})
+
 const AuthPage = () => {
     const navigate = useNavigate()
 
@@ -141,6 +151,7 @@ const AuthPage = () => {
     const [passwordErrorMessage, setPasswordErrorMessage] = useState('')
     const [authErrorMessage, setAuthErrorMessage] = useState('')
     const [showPassword, setShowPassword] = useState(false)
+    const [isLoading, setIsLoading] = useState(false);
 
     function logoButtonHandler() {
         navigate('/')
@@ -180,6 +191,7 @@ const AuthPage = () => {
     }
 
     async function authButtonHandler() {
+        setIsLoading(true)
         setAuthErrorMessage('')
         checkEmail()
         checkPassword()
@@ -194,6 +206,7 @@ const AuthPage = () => {
                 navigate('/')
             }
         }
+        setIsLoading(false)
     }
 
     return (
@@ -226,6 +239,7 @@ const AuthPage = () => {
                                 <IconButton
                                     edge='end'
                                     onClick={handleClickShowPassword}
+                                    disableRipple
                                 >
                                     {showPassword ? <VisibilityOff /> : <Visibility />}
                                 </IconButton>
@@ -246,6 +260,11 @@ const AuthPage = () => {
                 </RegButtonContainer>
                 <AuthButton disableRipple variant='contained' onClick={authButtonHandler}>Войти</AuthButton>
             </AuthWindow>
+            <Loading
+                open={isLoading}
+            >
+                <LoadingIcon/>
+            </Loading>
         </PageContainer>
     );
 };

@@ -1,3 +1,4 @@
+const e = require('express');
 const {Talon} = require('../models/talonModel')
 const { Op } = require("sequelize");
 
@@ -39,10 +40,19 @@ class TalonController {
     }
 
     async setStatus(req, res) {
-        const {id, status} = req.body
-        await Talon.update({status}, {where: {id}})
+        const {id, status, bankWindowId} = req.body
         const talon = await Talon.findOne({where: {id}})
-        return res.json(talon)
+        if (status == 'отменён' && (talon.status == 'готов к обслуживанию' || talon.status == 'обслуживается')) {
+            return res.send('талон уже обслуживается')
+        } else if (status == 'отменён' && (talon.status == 'не явился' || talon.status == 'обслужен')) {
+            return res.send('талон уже обслужен')
+        } else if (talon.status == 'отменён') {
+            return res.send('талон уже отменён')
+        } else {
+            await Talon.update({status, bankWindowId}, {where: {id}})
+            talon.status = status
+            return res.json(talon)
+        }
     }
 
     async getAllByServiceId(req, res) {

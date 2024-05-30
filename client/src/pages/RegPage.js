@@ -21,6 +21,8 @@ import UserStore from '../store/UserStore';
 import { styled } from '@mui/material/styles';
 import {EMAIL_REGEXP} from '../constants';
 import {jwtDecode} from 'jwt-decode';
+import Backdrop from '@mui/material/Backdrop';
+import CircularProgress from '@mui/material/CircularProgress';
 
 const PageContainer = styled(Box)({
     display: 'flex',
@@ -132,6 +134,14 @@ const RegButton = styled(Button)({
     }
 })
 
+const Loading = styled(Backdrop)(({theme}) => ({
+    zIndex: theme.zIndex.modal + 1
+}))
+
+const LoadingIcon = styled(CircularProgress)({
+    color: 'limegreen'
+})
+
 const RegPage = () => {
     const navigate = useNavigate()
 
@@ -146,6 +156,7 @@ const RegPage = () => {
     const [password, setPassword] = useState('')
     const [passwordErrorMessage, setPasswordErrorMessage] = useState('')
     const [showPassword, setShowPassword] = useState(false)
+    const [isLoading, setIsLoading] = useState(false);
 
     function logoButtonHandler() {
         navigate('/')
@@ -221,13 +232,14 @@ const RegPage = () => {
     }
 
     async function regButtonHandler() {
+        setIsLoading(true)
         checkName()
         checkSurname()
         checkPatronymic()
         checkEmail()
         checkPassword()
         if (checkName() && checkSurname() && checkPatronymic() && checkEmail() && checkPassword()) {
-            const response = await registration((patronymic.length > 0) ? `${surname} ${name} ${patronymic}` : `${surname} ${name}`, email, password, 'ADMIN')
+            const response = await registration((patronymic.length > 0) ? `${surname} ${name} ${patronymic}` : `${surname} ${name}`, email, password, 'USER')
             if (response == 'Пользователь с таким адресом электронной почты уже существует') {
                 setEmailErrorMessage(response)
             } else {
@@ -237,6 +249,7 @@ const RegPage = () => {
                 navigate('/')
             }
         }
+        setIsLoading(false)
     }
 
     return (
@@ -310,6 +323,11 @@ const RegPage = () => {
                 </AuthButtonContainer>
                 <RegButton disableRipple variant='contained' onClick={regButtonHandler}>Создать аккаунт</RegButton>
             </RegWindow>
+            <Loading
+                    open={isLoading}
+            >
+                <LoadingIcon/>
+            </Loading>
         </PageContainer>
     );
 };

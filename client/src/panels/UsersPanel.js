@@ -41,7 +41,7 @@ const Search = styled(TextField)({
     marginBottom: '20px'
 })
 
-const UsersPanel = observer(({setIsLoading}) => {
+const UsersPanel = observer(({setIsLoadingPanel}) => {
     const gridRef = useRef();
     const [columnTitles, setColumnTitles] = useState([
         {field: 'id', headerName: 'ID'},
@@ -54,7 +54,7 @@ const UsersPanel = observer(({setIsLoading}) => {
     useEffect(() => {
         getAllUsers('id', 'asc')
         .then(data => UserStore.setUsers(data))
-        .then(setIsLoading(false))
+        .finally(() => setIsLoadingPanel(false))
     }, [])
 
     function searchOnInput() {

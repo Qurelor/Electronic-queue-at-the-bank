@@ -25,14 +25,16 @@ import Alert from '@mui/material/Alert';
 import Backdrop from '@mui/material/Backdrop';
 import CircularProgress from '@mui/material/CircularProgress';
 
-const LoadingWindowContainer = styled(Box)({
+const LoadingPageContainer = styled(Box)({
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    width: '100vw',
     height: '100vh',
-    color: 'limegreen',
-    backgroundColor: 'white'
+    width: '100vw',
+})
+
+const LoadingIcon = styled(CircularProgress)({
+    color: 'limegreen'
 })
 
 const PageContainer = styled(Box)({
@@ -181,9 +183,8 @@ const ServiceButtonsMessage = styled(Typography)({
 
 })
 
-const LoadingTalon = styled(Backdrop)(({theme}) => ({
-    color: 'limegreen',
-    zIndex: theme.zIndex.drawer + 1
+const Loading = styled(Backdrop)(({theme}) => ({
+    zIndex: theme.zIndex.modal + 1
 }))
 
 const UserPage = observer(() => {
@@ -193,11 +194,29 @@ const UserPage = observer(() => {
     const [messageActive, setMessageActive] = useState(false)
     const [talonNumber, setTalonNumber] = useState('')
     const [openAlert, setOpenAlert] = useState(false)
-    const [isLoadingWindow, setIsLoadingWindow] = useState(true)
-    const [isLoadingTalon, setIsLoadingTalon] = useState(false)
+    const [isLoadingPage, setIsLoadingPage] = useState(true)
+    const [isLoading, setIsLoading] = useState(false)
 
     useEffect(() => {
-        getAllServices('id', 'asc').then((data) => ServiceStore.setServices(data)).finally(setIsLoadingWindow(false))
+        let interval
+        async function getServices() {
+            console.log('работаю')
+            const services = await getAllServices('id', 'asc')
+            ServiceStore.setServices(services)
+        }
+
+        async function getData() {
+            await getServices()
+            setIsLoadingPage(false)
+            interval = setInterval(getServices, 5000)
+        }
+        getData()
+
+        //getAllServices('id', 'asc').then((data) => ServiceStore.setServices(data)).finally(() => setIsLoadingWindow(false))
+
+        return () => {
+            clearInterval(interval)
+        }
     }, [])
 
     function logoButtonHandler() {
@@ -213,19 +232,21 @@ const UserPage = observer(() => {
     }
 
     async function exitButtonHandler() {
+        setIsLoading(false)
         if (UserStore.lastTalon) {
             UserStore.setLastTalon(null)
         }
         UserStore.setUser(null)
         localStorage.removeItem('token')
+        setIsLoading(true)
         navigate('/')
     }
 
     async function talonButtonHandler(serviceId) {
-        setIsLoadingTalon(true)
-        const servicedTalon = await getUnservicedTalonByUserId(UserStore.user.id)
-        if(servicedTalon){
-            setIsLoadingTalon(false)
+        setIsLoading(true)
+        const unservicedTalon = await getUnservicedTalonByUserId(UserStore.user.id)
+        if(unservicedTalon){
+            setIsLoading(false)
             setOpenAlert(true)
         } else {
             const maxNumber = await getTalonMaxNumberByServiceId(serviceId)
@@ -233,13 +254,13 @@ const UserPage = observer(() => {
             if (maxNumber == null) {
                 const talon = await createTalon(1, 'ожидание', serviceId, UserStore.user.id)
                 talon.type = type
-                UserStore.setLastTalon(talon)
+                UserStore.setReceivedTalon(talon)
             } else {
                 const talon = await createTalon(Number(maxNumber)+1, 'ожидание', serviceId, UserStore.user.id)
                 talon.type = type
-                UserStore.setLastTalon(talon)
+                UserStore.setReceivedTalon(talon)
             }
-            setIsLoadingTalon(false)
+            setIsLoading(false)
             setMessageActive(true)
         }
     }
@@ -252,11 +273,11 @@ const UserPage = observer(() => {
         setOpenAlert(false)
     }
 
-    if(isLoadingWindow) {
+    if (isLoadingPage) {
         return (
-            <LoadingWindowContainer>
-                <CircularProgress color="inherit" />
-            </LoadingWindowContainer>
+            <LoadingPageContainer>
+                <LoadingIcon/>
+            </LoadingPageContainer>
         )
     }
 
@@ -296,7 +317,7 @@ const UserPage = observer(() => {
                         <Box />
                         <TalonInfoContainer>
                             <SuccessIcon/>
-                            Ваш талон: {`${UserStore.lastTalon.type}-${UserStore.lastTalon.number}`}
+                            Ваш талон: {`${UserStore.receivedTalon.type}-${UserStore.receivedTalon.number}`}
                         </TalonInfoContainer>
                         <ButtonsContainer>
                             <ExitToHomePageButton disableRipple variant='outlined' onClick={exitToHomePageButtonHandler}>Вернуться на главную страницу</ExitToHomePageButton>
@@ -320,11 +341,6 @@ const UserPage = observer(() => {
                             </ServiceButtonsMessage>
                         </ServiceButtonsMessageContainer>}
                 </ServiceContainer>}
-                <LoadingTalon
-                    open={isLoadingTalon}
-                >
-                    <CircularProgress color="inherit" />
-                </LoadingTalon>
                 <Snackbar open={openAlert} autoHideDuration={6000} onClose={handleCloseAlert} TransitionComponent={Slide}>
                     <Alert
                         severity='error'
@@ -333,6 +349,11 @@ const UserPage = observer(() => {
                         У вас уже есть необслуженный талон! Дождитесь обслуживания или отмените талон для заказа нового.
                     </Alert>
                 </Snackbar>
+                <Loading
+                    open={isLoading}
+                >
+                    <LoadingIcon/>
+                </Loading>
         </PageContainer>
     );
 });

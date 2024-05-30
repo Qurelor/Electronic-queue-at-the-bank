@@ -21,17 +21,20 @@ import ServicesPanel from '../panels/ServicesPanel';
 import CircularProgress from '@mui/material/CircularProgress';
 import Backdrop from '@mui/material/Backdrop';
 
-const Loading = styled(Box)(({theme}) => ({
+const LoadingPanels = styled(Box)(({theme}) => ({
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
     position: 'absolute',
     height: '100vh',
     width: '100vw',
-    color: 'limegreen',
     zIndex: theme.zIndex.drawer + 1,
     backgroundColor: 'white'
 }))
+
+const LoadingIcon = styled(CircularProgress)({
+    color: 'limegreen'
+})
 
 const LoadingWindowContainer = styled(Box)({
     display: 'flex',
@@ -186,6 +189,10 @@ const ServicesButton = styled(Button)({
     }
 })
 
+const Loading = styled(Backdrop)(({theme}) => ({
+    zIndex: theme.zIndex.modal + 1
+}))
+
 const AdminPage = () => {
 
     const navigate = useNavigate();
@@ -195,6 +202,7 @@ const AdminPage = () => {
     const [showServicesPanel, setShowServicesPanel] = useState(false);
     const [isLoadingAddPanel, setIsLoadingAddPanel] = useState(false);
     const [isLoadingDataPanel, setIsLoadingDataPanel] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
     function logoButtonHandler() {
         navigate('/')
@@ -207,10 +215,12 @@ const AdminPage = () => {
     }
 
     function bankWindowsButtonHandler() {
+        setIsLoadingDataPanel(true)
         setShowBankWindowsPanel(true)
     }
 
     function servicesButtonHandler() {
+        setIsLoadingDataPanel(true)
         setShowServicesPanel(true)
     }
     
@@ -229,18 +239,19 @@ const AdminPage = () => {
     }
     
     function exitButtonHandler() {
-        localStorage.removeItem('token')
+        setIsLoading(true)
         UserStore.setUser(null)
+        localStorage.removeItem('token')
+        setIsLoading(false)
         navigate('/')
     }
 
     return (
         <PageContainer>
             {(isLoadingAddPanel || isLoadingDataPanel) &&
-            <Loading
-            >
-                <CircularProgress color="inherit" />
-            </Loading>}
+            <LoadingPanels>
+                <LoadingIcon/>
+            </LoadingPanels>}
             <Header>
                 <HeaderContentContainer>
                     <Logo onClick={logoButtonHandler}>БЕЛБАНК</Logo>
@@ -273,15 +284,15 @@ const AdminPage = () => {
             {(showUsersPanel || showBankWindowsPanel || showServicesPanel) && 
             <PanelsContainer>
                 <Box>
-                    {showUsersPanel && <AddUserPanel setIsLoading={setIsLoadingAddPanel}></AddUserPanel>}
+                    {showUsersPanel && <AddUserPanel setIsLoadingPanel={setIsLoadingAddPanel}></AddUserPanel>}
                     {showBankWindowsPanel && <AddBankWindowPanel></AddBankWindowPanel>}
                     {showServicesPanel && <AddServicePanel></AddServicePanel>}
                     <Box/>
                 </Box>
                 <Box>
-                    {showUsersPanel && <UsersPanel setIsLoading={setIsLoadingDataPanel}></UsersPanel>}
-                    {showBankWindowsPanel && <BankWindowsPanel></BankWindowsPanel>}
-                    {showServicesPanel && <ServicesPanel></ServicesPanel>}
+                    {showUsersPanel && <UsersPanel setIsLoadingPanel={setIsLoadingDataPanel}></UsersPanel>}
+                    {showBankWindowsPanel && <BankWindowsPanel setIsLoadingPanel={setIsLoadingDataPanel}></BankWindowsPanel>}
+                    {showServicesPanel && <ServicesPanel setIsLoadingPanel={setIsLoadingDataPanel}></ServicesPanel>}
                     <Box/>
                 </Box>
             </PanelsContainer>}
@@ -293,6 +304,11 @@ const AdminPage = () => {
                     <ServicesButton disableRipple variant='outlined' onClick={servicesButtonHandler}>Услуги</ServicesButton>
                 </BackgroundButtons>
             </ButtonsContainer>}
+            <Loading
+                open={isLoading}
+            >
+                <LoadingIcon/>
+            </Loading>
         </PageContainer>
     );
 };

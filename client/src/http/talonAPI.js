@@ -22,8 +22,8 @@ export const setTalonBankWindowId = async (id, bankWindowId) => {
     return data
 }
 
-export const setTalonStatus = async (id, status) => {
-    const {data} = await $authHost.post('api/talon/setStatus', {id, status})
+export const setTalonStatus = async (id, status, bankWindowId) => {
+    const {data} = await $authHost.post('api/talon/setStatus', {id, status, bankWindowId})
     return data
 }
 

@@ -1,5 +1,5 @@
 import Box from '@mui/material/Box';
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {observer} from 'mobx-react-lite';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
@@ -21,6 +21,10 @@ import {getAllBankWindowsWithCashier, getCashierIdByBankWindowId, setBankWindowC
 import BankWindowStore from '../store/BankWindowStore';
 import CashierStore from '../store/CashierStore';
 import CircularProgress from '@mui/material/CircularProgress';
+import Backdrop from '@mui/material/Backdrop';
+import Snackbar from '@mui/material/Snackbar';
+import Slide from '@mui/material/Slide';
+import Alert from '@mui/material/Alert';
 
 const LoadingContainer = styled(Box)({
     display: 'flex',
@@ -208,6 +212,17 @@ const UserTalonWindowTitle = styled(Typography)({
     fontWeight: 'bold'
 })
 
+const UserTalonAndButtonContainer = styled(Box)({
+    display: 'flex',
+    flexDirection: 'column',
+    position: 'relative'
+})
+
+const LoadingUserTalonWindow = styled(Backdrop)(({theme}) => ({
+    position: 'absolute',
+    zIndex: theme.zIndex.drawer + 1
+}))
+
 const UserTalonContainer = styled(Box)({
     display: 'flex',
     justifyContent: 'center',
@@ -334,34 +349,46 @@ const TalonNumber = styled(Typography)({
     fontSize: '25px'
 })
 
+const Loading = styled(Backdrop)(({theme}) => ({
+    zIndex: theme.zIndex.modal + 1
+}))
+
 const HomePage = observer(() => {
 
     const navigate = useNavigate()
     const [anchorEl, setAnchorEl] = useState(null);
-    const [isLoading, setIsLoading] = useState(true)
+    const [isLoadingPage, setIsLoadingPage] = useState(true)
+    const [isLoadingUserTalonWindow, setIsLoadingUserTalonWindow] = useState(false)
+    const [openTalonServicedAlert, setOpenTalonServicedAlert] = useState(false)
+    const [openTalonEndServiceAlert, setOpenTalonEndServiceAlert] = useState(false)
+    const intervalRef = useRef(null)
+    const [isLoading, setIsLoading] = useState(false)
 
     useEffect(() => {
-        let interval
         async function getDataByRole() {
+            console.log('запуск с хомпейджа')
             if (UserStore.user && UserStore.user.role == 'USER') {
                 const lastTalon = await getLastTalonWithType()
                 const bankWindows = await getBankWindows()
+                console.log(lastTalon)
+                console.log(bankWindows)
                 UserStore.setLastTalon(lastTalon)
                 BankWindowStore.setBankWindows(bankWindows)
             } else {
                 const bankWindows = await getBankWindows()
+                console.log(bankWindows)
                 BankWindowStore.setBankWindows(bankWindows)
             }
         }
         async function getData() {
             await getDataByRole()
-            setIsLoading(false)
-            interval = setInterval(getDataByRole, 5000)
+            setIsLoadingPage(false)
+            intervalRef.current = setInterval(getDataByRole, 5000)
         }
         getData()
 
         return () => {
-            clearInterval(interval)
+            clearInterval(intervalRef.current)
         }
     }, [])
 
@@ -379,7 +406,8 @@ const HomePage = observer(() => {
     async function getBankWindows() {
         const bankWindows = await getAllBankWindowsWithCashier('number', 'asc')
         if (bankWindows) {
-            return await getBankWindowsWithTalons(bankWindows)
+            const bankWindowsWithTalons = await getBankWindowsWithTalons(bankWindows)
+            return bankWindowsWithTalons.filter((bankWindowWithTalons => bankWindowWithTalons))
         } else {
             return bankWindows
         }
@@ -394,16 +422,20 @@ const HomePage = observer(() => {
             }
             bankWindow.servicedTalon = servicedTalon
             const cashierId = await getCashierIdByBankWindowId(bankWindow.id)
-            const serviceIds = await getServiceIdsByCashierId(cashierId)
-            if(serviceIds.length != 0) {
-                const talons = await getAllTalons(serviceIds, 'ожидание')
-                const talonsWithTypes = await Promise.all(talons.map(async talon => {
-                    const type = await getTypesByServiceIds(talon.serviceId); talon.type = type; return talon
-                }));
-                bankWindow.talons = talonsWithTypes
-                return bankWindow
+            if (cashierId) {
+                const serviceIds = await getServiceIdsByCashierId(cashierId)
+                if(serviceIds.length != 0) {
+                    const talons = await getAllTalons(serviceIds, 'ожидание')
+                    const talonsWithTypes = await Promise.all(talons.map(async talon => {
+                        const type = await getTypesByServiceIds(talon.serviceId); talon.type = type; return talon
+                    }));
+                    bankWindow.talons = talonsWithTypes
+                    return bankWindow
+                } else {
+                    return bankWindow
+                }
             } else {
-                return bankWindow
+                return null
             }
         }))
         return bankWindowsWithTalons
@@ -438,17 +470,19 @@ const HomePage = observer(() => {
     }
 
     async function exitButtonHandler() {
+        setIsLoading(true)
+        //clearInterval(intervalRef.current)
         if (UserStore.user.role == 'CASHIER'){
             if(CashierStore.servicedTalon) {
-                setTalonStatus(CashierStore.servicedTalon.id, 'обслужен')
+                //setTalonStatus(CashierStore.servicedTalon.id, 'обслужен')
                 CashierStore.setServicedTalon(null)
             }
             if(CashierStore.bankWindow) {
-                setBankWindowCashierId(CashierStore.bankWindow.id, null)
+                //setBankWindowCashierId(CashierStore.bankWindow.id, null)
                 CashierStore.setBankWindow(null)
             }
-            const bankWindows = await getBankWindows()
-            BankWindowStore.setBankWindows(bankWindows)
+            //const bankWindows = await getBankWindows()
+            //BankWindowStore.setBankWindows(bankWindows)
         }
         if (UserStore.user.role == 'USER') {
             if (UserStore.lastTalon) {
@@ -457,18 +491,44 @@ const HomePage = observer(() => {
         }
         UserStore.setUser(null)
         localStorage.removeItem('token')
+        setIsLoading(false)
     }
 
     async function cancelButtonHandler(talonId) {
-        const talon = await setTalonStatus(talonId, 'отменён')
-        const type = await getTypesByServiceIds(talon.serviceId)
-        talon.type = type
-        const bankWindows = await getBankWindows()
-        UserStore.setLastTalon(talon)
-        BankWindowStore.setBankWindows(bankWindows)
+        setIsLoadingUserTalonWindow(true)
+        const response = await setTalonStatus(talonId, 'отменён')
+        if (response == 'талон уже обслуживается') {
+            const lastTalon = await getLastTalonWithType()
+            const bankWindows = await getBankWindows()
+            UserStore.setLastTalon(lastTalon)
+            BankWindowStore.setBankWindows(bankWindows)
+            setOpenTalonServicedAlert(true)
+        } else if (response == 'талон уже обслужен') { 
+            const lastTalon = await getLastTalonWithType()
+            const bankWindows = await getBankWindows()
+            UserStore.setLastTalon(lastTalon)
+            BankWindowStore.setBankWindows(bankWindows)
+            setOpenTalonEndServiceAlert(true)
+        } else {
+            const talon = response
+            const type = await getTypesByServiceIds(talon.serviceId)
+            talon.type = type
+            const bankWindows = await getBankWindows()
+            UserStore.setLastTalon(talon)
+            BankWindowStore.setBankWindows(bankWindows)
+        }
+        setIsLoadingUserTalonWindow(false)
     }
 
-    if (isLoading) {
+    function handleCloseTalonServicedAlert() {
+        setOpenTalonServicedAlert(false)
+    }
+
+    function handleCloseTalonEndServiceAlert() {
+        setOpenTalonEndServiceAlert(false)
+    }
+
+    if (isLoadingPage) {
         return (
             <LoadingContainer>
                 <LoadingIcon/>
@@ -539,7 +599,10 @@ const HomePage = observer(() => {
                             <UserTalonWindowTitle>Ваш талон</UserTalonWindowTitle>
                         </UserTalonWindowTitleContainer>
                         {UserStore.lastTalon ?
-                            <React.Fragment>
+                            <UserTalonAndButtonContainer>
+                                <LoadingUserTalonWindow open={isLoadingUserTalonWindow}>
+                                    <LoadingIcon/>
+                                </LoadingUserTalonWindow>
                                 <UserTalonContainer>
                                     <UserTalon elevation={9}>
                                         <UserTalonNumber>{`${UserStore.lastTalon.type}-${UserStore.lastTalon.number}`}</UserTalonNumber>
@@ -551,7 +614,8 @@ const HomePage = observer(() => {
                                 </UserTalonContainer>
                                 {UserStore.lastTalon.status == 'ожидание' &&
                                     <CancelButton disableRipple onClick={() => cancelButtonHandler(UserStore.lastTalon.id)}>Отменить</CancelButton>
-                                }</React.Fragment> :
+                                }
+                            </UserTalonAndButtonContainer> :
                             <UserTalonMessageContainer>
                                 <UserTalonMessage>
                                     Вы еще ни разу не заказывали талон
@@ -578,6 +642,27 @@ const HomePage = observer(() => {
                     </QueueStatusContainer>
                 </React.Fragment>
             }
+            <Snackbar open={openTalonServicedAlert} autoHideDuration={6000} onClose={handleCloseTalonServicedAlert} TransitionComponent={Slide}>
+                    <Alert
+                        severity='error'
+                        variant='filled'
+                    >
+                        Талон уже обслуживается
+                    </Alert>
+            </Snackbar>
+            <Snackbar open={openTalonEndServiceAlert} autoHideDuration={6000} onClose={handleCloseTalonEndServiceAlert} TransitionComponent={Slide}>
+                    <Alert
+                        severity='error'
+                        variant='filled'
+                    >
+                        Талон уже обслужен
+                    </Alert>
+            </Snackbar>
+            <Loading
+                    open={isLoading}
+            >
+                <LoadingIcon/>
+            </Loading>
         </PageContainer>
     );
 });

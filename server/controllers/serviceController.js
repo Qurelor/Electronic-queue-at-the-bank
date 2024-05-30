@@ -60,6 +60,10 @@ class ServiceController {
         const services = await Service.findAll({where: {cashierId}})
         return res.json(services)
     }
+
+    async delete(req, res) {
+        const {id} = req.body
+    }
 }
 
 module.exports = new ServiceController()

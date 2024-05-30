@@ -18,6 +18,7 @@ import DialogTitle from '@mui/material/DialogTitle';
 import RadioGroup from '@mui/material/RadioGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Radio from '@mui/material/Radio';
+import Box from '@mui/material/Box';
 
 const TableButton = styled(Button)({
     backgroundColor: 'limegreen',
@@ -93,14 +94,59 @@ const SaveButton = styled(Button)({
     textTransform: 'none'
 })
 
-const ServicesPanel = observer(() => {
+const DeleteButton = styled(Button)({
+    backgroundColor: 'red',
+    color: 'black',
+    flex: 1,
+    ':hover': {
+        backgroundColor: 'black',
+        color: 'white'
+    },
+    textTransform: 'none'
+})
+
+const ButtonsContainer = styled(Box)({
+    display: 'flex',
+    justifyContent: 'center',
+    width: '100%'
+})
+
+const ConfirmButton = styled(Button)({
+    backgroundColor: 'red',
+    color: 'black',
+    ':hover': {
+        backgroundColor: 'black',
+        color: 'white'
+    },
+    textTransform: 'none',
+    marginRight: '10px'
+})
+
+const CancelButton = styled(Button)({
+    backgroundColor: 'white',
+    color: 'black',
+    ':hover': {
+        backgroundColor: 'black',
+        color: 'white'
+    },
+    textTransform: 'none',
+    borderColor: 'limegreen'
+})
+
+const ServicesPanel = observer(({setIsLoadingPanel}) => {
     const gridRef = useRef();
     const [columnTitles, setColumnTitles] = useState([
         {field: 'id', headerName: 'ID'},
         {field: 'type', headerName: 'Тип'},
         {field: 'description', headerName: 'Описание'},
         {field: 'cashierFullName', headerName: 'Кассир'},
-        {field: 'button', cellRenderer: TableButtonFunction, headerName: 'Выбор кассира', cellStyle: () => ({
+        {field: 'selectCashierButton', cellRenderer: SelectCashierButtonFunction, headerName: 'Выбор кассира', cellStyle: () => ({
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            border: 'none'
+        })},
+        {field: 'deleteButton', cellRenderer: DeleteButtonFunction, headerName: 'Удаление услуги', cellStyle: () => ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -108,7 +154,7 @@ const ServicesPanel = observer(() => {
         })}
     ])
 
-    function TableButtonFunction(props) {
+    function SelectCashierButtonFunction(props) {
         const [openDialog, setOpenDialog] = useState(false)
         const [value, setValue] = useState(props.data.cashierId)
 
@@ -157,8 +203,58 @@ const ServicesPanel = observer(() => {
         )
     }
 
+    function DeleteButtonFunction(props) {
+        const [openDialog, setOpenDialog] = useState(false)
+
+        const handleOpenDialog = () => {
+            setOpenDialog(true)
+        }
+
+        function confirmButtonHandler() {
+            
+        }
+
+        function cancelButtonHandler() {
+            setOpenDialog(false)
+        }
+
+        return (
+            <>
+                <DeleteButton disableRipple onClick={handleOpenDialog}>Удалить</DeleteButton>
+                <StyledDialog open={openDialog} onClose={() => setOpenDialog(false)}>
+                    <StyledDialogTitle>Вы уверены?</StyledDialogTitle>
+                    <ButtonsContainer>
+                        <ConfirmButton disableRipple>Да</ConfirmButton>
+                        <CancelButton variant='outlined' disableRipple onClick={cancelButtonHandler}>Нет</CancelButton>
+                    </ButtonsContainer>
+                </StyledDialog>
+            </>
+        )
+    }
+
     useEffect(() => {
-        getAllServices('id', 'asc')
+        async function getData() {
+            const services = await getAllServices('id', 'asc')
+            let servicesWithCashierFullName = await Promise.all(services.map(async service => {
+                if(service.cashierId){
+                    const cashierUserId = await getUserIdByCashierId(service.cashierId)
+                    const cashierFullName = await getFullNameByUserId(cashierUserId)
+                    service.cashierFullName = cashierFullName
+                }
+                return service
+            }))
+            ServiceStore.setServices(servicesWithCashierFullName)
+            const cashiers = await getAllCashiers()
+            let cashiersWithFullName = await Promise.all(cashiers.map(async cashier => {
+                const cashierFullName = await getFullNameByUserId(cashier.userId)
+                cashier.fullName = cashierFullName
+                return cashier
+            }))
+            CashierStore.setCashiers(cashiersWithFullName)
+            setIsLoadingPanel(false)
+        }
+        getData()
+        /*getAllServices('id', 'asc')
         .then(async data => {
             let servicesWithCashierFullName = await Promise.all(data.map(async service => {
                 if(service.cashierId){
@@ -168,7 +264,6 @@ const ServicesPanel = observer(() => {
                 }
                 return service
             }))
-            console.log(servicesWithCashierFullName)
             ServiceStore.setServices(servicesWithCashierFullName)
         })
 
@@ -179,9 +274,8 @@ const ServicesPanel = observer(() => {
                 cashier.fullName = cashierFullName
                 return cashier
             }))
-            console.log(cashiersWithFullName)
             CashierStore.setCashiers(cashiersWithFullName)
-        })
+        })*/
     }, [])
 
     function searchOnInput() {
